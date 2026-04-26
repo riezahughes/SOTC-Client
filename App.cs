@@ -226,6 +226,16 @@ public class App
             //    Console.WriteLine($"ID: {location.Id} - {location.Name}");
             //}
 
+            GameStateHelpers.SetNewGamePlus(_cancellationTokenSource);
+            GameStateHelpers.SetGameBeaten(_cancellationTokenSource);
+
+            while (!APHelpers.isInTheGame())
+            {
+                Console.Clear();
+                Console.WriteLine("Waiting for game to start...");
+                Thread.Sleep(200);
+            }
+
             try
             {
 

@@ -1,4 +1,6 @@
 using Archipelago.Core;
+using Archipelago.Core.Util;
+using SotcArchipelago;
 
 namespace Helpers
 {
@@ -36,6 +38,34 @@ namespace Helpers
                 return true;
             }
             return false;
+        }
+
+        public static void SetNewGamePlus(CancellationTokenSource cts)
+        {
+            if (cts.Token.IsCancellationRequested) return;
+
+            Memory.MonitorAddressForAction<byte>(
+                Addresses.NewGamePlusFlag,
+                () =>
+                {
+                    Memory.Write(Addresses.NewGamePlusFlag, 0x01);
+                    SetNewGamePlus(cts);
+                },
+            value => value == 0);
+        }
+
+        public static void SetGameBeaten(CancellationTokenSource cts)
+        {
+            if (cts.Token.IsCancellationRequested) return;
+
+            Memory.MonitorAddressForAction<byte>(
+                Addresses.GameClearedCount,
+                () =>
+                {
+                    Memory.Write(Addresses.GameClearedCount, 0x01);
+                    SetGameBeaten(cts);
+                },
+            value => value == 0);
         }
 
     }

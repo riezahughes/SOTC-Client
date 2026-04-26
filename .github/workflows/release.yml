@@ -1,4 +1,4 @@
-﻿name: Release APWorld
+﻿name: Release APWorld Client
 on:
   push:
     tags:

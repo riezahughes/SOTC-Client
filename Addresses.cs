@@ -2,6 +2,10 @@ namespace SotcArchipelago
 {
     class Addresses
     {
+
+        // IMPORTANT GAME STATE DATA IS AROUND 121D98
+
+
         // mark all your addresses here for easy access. Then you can just use Addresses.test, as an example.
         public const uint test = 0x000123123;
 
@@ -10,6 +14,9 @@ namespace SotcArchipelago
         public const uint InGameCheck = 0x012d9bc0;
         public const uint SaveDataPopup = 0x012DA4F0;
         public const uint IsFightingColossi = 0x012de128; // Whenever it's NOT 0x00
+
+        public const uint NewGamePlusFlag = 0x12de14c;
+        public const uint GameClearedCount = 0x012da3f4;
 
         public const uint NumberOfColossiKilled = 0x012de128;
 
@@ -47,9 +54,7 @@ namespace SotcArchipelago
         public const uint MaxHealth = 0x012d9bcc; // This number is +4 every colossus
         public const uint MaxStamina = 0x012d9bd0; // This number is +4 every colossus
 
-
-        // Shrine Addresses
-        public const uint ShrineSaving = 0x000000;
+        public const uint ShowFruitOnMap = 0x012DA3E5;
 
         // Lizard Addresses
         public const uint LizardC1Center = 0x12d9df8; // bit 0
