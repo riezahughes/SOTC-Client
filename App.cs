@@ -55,7 +55,7 @@ public class App
 
             try
             {
-                gameClient = new GameClient("PCSX2");
+                gameClient = new GameClient("pcsx2-qt");
                 clientInitializedAndConnected = true;
             }
             catch (Exception ex)
@@ -173,7 +173,7 @@ public class App
 
             // Register event handlers
             archipelagoClient.ItemManager.ItemReceived += (sender, args) => APHelpers.ItemReceivedLogic(sender, args, archipelagoClient);
-            archipelagoClient.MessageReceived += (sender, args) => APHelpers.Client_MessageReceivedLogic(sender, args, archipelagoClient);
+            archipelagoClient.MessageReceived += (sender, args) => APHelpers.Client_MessageReceivedLogic(sender, args, archipelagoClient, slot);
             archipelagoClient.LocationManager.LocationCompleted += (sender, args) => APHelpers.Client_LocationCompletedLogic(sender, args, archipelagoClient);
             archipelagoClient.LocationManager.EnableLocationsCondition = () => APHelpers.isInTheGame();
             archipelagoClient.CurrentSession.Locations.CheckedLocationsUpdated += APHelpers.Locations_CheckedLocationsUpdated;
@@ -220,6 +220,11 @@ public class App
             });
 
             archipelagoClient.IntializeOverlayService(gameOverlay);
+
+            foreach (var location in GameLocations)
+            {
+                Console.WriteLine($"ID: {location.Id} - {location.Name}");
+            }
 
             try
             {

@@ -1,6 +1,9 @@
 using Archipelago.Core;
 using Archipelago.Core.Models;
+using Archipelago.Core.Util;
+using Kokuban;
 using Serilog;
+using SotcArchipelago;
 
 namespace Helpers
 {
@@ -10,9 +13,14 @@ namespace Helpers
         public static Boolean isInTheGame()
         {
 
-            // ulong currentGameStatus = Memory.ReadUInt(Addresses.InGameCheck);
-            // TODO: check values in here against the game
-            return true;
+            ulong currentGameStatus = Memory.ReadUInt(Addresses.InGameCheck);
+
+            if (currentGameStatus != 0xff)
+            {
+                return true;
+
+            }
+            return false;
         }
 
         public static async void OnConnectedLogic(object sender, EventArgs args, ArchipelagoClient client)
@@ -57,7 +65,7 @@ namespace Helpers
             Console.WriteLine("Item Received");
         }
 
-        public static void Client_MessageReceivedLogic(object sender, MessageReceivedEventArgs e, ArchipelagoClient client)
+        public static void Client_MessageReceivedLogic(object sender, MessageReceivedEventArgs e, ArchipelagoClient client, string slot)
         {
 
             if (client.CurrentSession == null)
@@ -67,28 +75,30 @@ namespace Helpers
 
             var message = string.Join("", e.Message.Parts.Select(p => p.Text));
 
+            var timestamp = DateTime.Now.ToString("HH:mm:ss");
+
             client.AddOverlayMessage(e.Message.ToString());
 
             // adds coloured messages to terminal
 
-            // string prefix;
-            // Kokuban.AnsiEscape.AnsiStyle bg;
-            // Kokuban.AnsiEscape.AnsiStyle fg;
+            string prefix;
+            Kokuban.AnsiEscape.AnsiStyle bg;
+            Kokuban.AnsiEscape.AnsiStyle fg;
 
-            // if (message.Contains($"{slot} found") || message.Contains($"{slot} sent"))
-            // {
-            //     bg = message.Contains("Trap:") ? Chalk.BgRed : message.Contains("Congratulations") ? Chalk.Yellow : Chalk.BgBlue;
-            //     fg = Chalk.White;
-            //     prefix = " >> ";
-            // }
-            // else
-            // {
-            //     bg = message.Contains("Trap:") ? Chalk.BgRed : message.Contains("Congratulations") ? Chalk.Yellow : Chalk.BgGreen;
-            //     fg = Chalk.White;
-            //     prefix = " << ";
-            // }
+            if (message.Contains($"{slot} found") || message.Contains($"{slot} sent"))
+            {
+                bg = message.Contains("Trap:") ? Chalk.BgRed : message.Contains("Congratulations") ? Chalk.Yellow : Chalk.BgBlue;
+                fg = Chalk.White;
+                prefix = " >> ";
+            }
+            else
+            {
+                bg = message.Contains("Trap:") ? Chalk.BgRed : message.Contains("Congratulations") ? Chalk.Yellow : Chalk.BgGreen;
+                fg = Chalk.White;
+                prefix = " << ";
+            }
 
-            // Console.WriteLine(bg + (fg + $"{prefix} {message} "));
+            Console.WriteLine(bg + (fg + $"[{timestamp}]{prefix}{message}"));
         }
 
         public static void Client_LocationCompletedLogic(object sender, LocationCompletedEventArgs e, ArchipelagoClient client)

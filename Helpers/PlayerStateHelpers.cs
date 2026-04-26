@@ -1,6 +1,6 @@
 using Archipelago.Core;
 using Archipelago.Core.Util;
-using ClientTemplate;
+using SotcArchipelago;
 using SotcArchipelago.Helpers;
 
 namespace Helpers

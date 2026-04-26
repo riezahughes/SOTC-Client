@@ -1,7 +1,6 @@
 ﻿using Archipelago.Core;
 using Archipelago.Core.Util;
 using Archipelago.MultiClient.Net.Models;
-using ClientTemplate;
 using Helpers;
 using Kokuban;
 
