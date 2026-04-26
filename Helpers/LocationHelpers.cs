@@ -837,7 +837,7 @@ namespace Helpers
             return g8;
         }
 
-        // ===== Bosses =====
+        //  BOSSES
 
         public static List<GenericLocationData> GetBossD1Data(Dictionary<string, object> options)
         {
@@ -966,12 +966,5 @@ namespace Helpers
         };
             return bossF8;
         }
-
-
-        //SotcLocationData("Map Grid C1", "Sliver of Hope HP", SotcLocationCategory.GRID_LOCATION),
-        //SotcLocationData("C1 - Shrine", "Sliver of Hope HP", SotcLocationCategory.SHRINE),
-        //SotcLocationData("C1 - Lizard - Center", "Sliver of Hope HP", SotcLocationCategory.LIZARD),
-        //SotcLocationData("C1 - Fruit - South 1", "Sliver of Hope HP", SotcLocationCategory.FRUIT),
-        //SotcLocationData("C1 - Fruit - South 2", "Sliver of Hope HP", SotcLocationCategory.FRUIT),
     }
 }

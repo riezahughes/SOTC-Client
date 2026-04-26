@@ -221,10 +221,10 @@ public class App
 
             archipelagoClient.IntializeOverlayService(gameOverlay);
 
-            foreach (var location in GameLocations)
-            {
-                Console.WriteLine($"ID: {location.Id} - {location.Name}");
-            }
+            //foreach (var location in GameLocations)
+            //{
+            //    Console.WriteLine($"ID: {location.Id} - {location.Name}");
+            //}
 
             try
             {
