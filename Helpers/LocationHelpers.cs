@@ -257,7 +257,7 @@ namespace Helpers
                             {
                                 Id = -1,
                                 Name = "Shrine Interaction",
-                                Address = Addresses.ShrineSaving,
+                                Address = Addresses.SaveDataPopup,
                                 CheckType = LocationCheckType.Byte,
                                 CompareType = LocationCheckCompareType.Match,
                                 CheckValue = "1"
