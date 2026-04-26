@@ -1,12 +1,12 @@
 using Archipelago.Core;
-using Serilog;
-using Helpers;
 using Archipelago.Core.Models;
+using Serilog;
 
 namespace Helpers
 {
     public class APHelpers
     {
+        public static bool PROCESSING_ITEM_LIST = false;
         public static Boolean isInTheGame()
         {
 

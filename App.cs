@@ -1,23 +1,36 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Text;
 using Archipelago.Core;
-using Archipelago.Core.GameClients;
+using Archipelago.Core.Helpers;
 using Archipelago.Core.Models;
 using Archipelago.Core.Util;
+using Archipelago.Core.Util.Overlay;
+using Archipelago.MultiClient.Net.Models;
 using Helpers;
+using Microsoft.Extensions.Configuration;
+using SotcArchipelago.Helpers;
+using SotcArchipelago.Options;
 
-internal class Program
+public class App
 {
+
+    public static int ProcessedItemIndex = 0;
+
+    public static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
     private static async Task Main(string[] args)
     {
+        Console.OutputEncoding = Encoding.UTF8;
+        Console.Title = "🐎🐴 SOTC Archipelago Client";
+
 
         // Connection details
         string url;
         string port;
         string slot;
         string password;
-        string gameName = "Vagrant Story";
-
+        string gameName = "Shadow of the Colossus";
 
         List<ILocation> GameLocations = null;
 
@@ -29,9 +42,9 @@ internal class Program
 
         // Make sure the connect is initialised
 
+        GameClient gameClient = null;
+        bool clientInitializedAndConnected = false;
 
-        DuckstationClient gameClient = null;
-        bool clientInitializedAndConnected = false; // Renamed for clarity
         int retryAttempt = 0;
 
         while (!clientInitializedAndConnected)
@@ -42,43 +55,59 @@ internal class Program
 
             try
             {
-                gameClient = new DuckstationClient();
+                gameClient = new GameClient("PCSX2");
                 clientInitializedAndConnected = true;
             }
             catch (Exception ex)
             {
-                // Catch any exception thrown during the DuckstationClient constructor call
-                // or any other unexpected error during the try block.
-                Console.WriteLine($"Could not find Duckstation open.");
-
-                // Wait for 5 seconds before the next retry
-                Thread.Sleep(5000); // 5000 milliseconds = 5 seconds
+                Console.WriteLine($"Could not find PCSX2 open.");
+                Thread.Sleep(5000);
             }
         }
+
+#if DEBUG
+#else
+        Console.Clear();
+#endif
+
 
         bool connected = gameClient.Connect();
         var archipelagoClient = new ArchipelagoClient(gameClient);
 
-        archipelagoClient.CancelMonitors();
-        archipelagoClient.Connected -= (sender, args) => APHelpers.OnConnectedLogic(sender, args, archipelagoClient);
-        archipelagoClient.Disconnected -= (sender, args) => APHelpers.OnDisconnectedLogic(sender, args, archipelagoClient);
-        archipelagoClient.ItemReceived -= (sender, args) => APHelpers.ItemReceivedLogic(sender, args, archipelagoClient);
-        archipelagoClient.LocationCompleted -= (sender, args) => APHelpers.Client_LocationCompletedLogic(sender, args, archipelagoClient);
-
-        Console.WriteLine("Successfully connected to Duckstation.");
+        Console.WriteLine("Successfully connected to PCSX2.");
 
         // get the duckstation offset
         try
         {
-            Memory.GlobalOffset = Memory.GetDuckstationOffset();
+            Memory.GlobalOffset = Memory.GetPCSX2Offset();
+            Console.WriteLine($"PCSX2 Memory Offset found at: 0x{Memory.GlobalOffset:X}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An unexpected error occurred while getting Duckstation memory offset: {ex.Message}");
-            Console.WriteLine(ex); // Print full exception for debugging
+            Console.WriteLine($"An unexpected error occurred while getting PCSX2 memory offset: {ex.Message}");
+            Console.WriteLine(ex);
         }
 
-        Console.WriteLine("Enter AP url: eg,archipelago.gg");
+#if DEBUG
+        // auto logs in with Local.json settings if it's set to dev (because laziness)
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true)
+            .Build();
+
+        Console.WriteLine("Logging in using settings in appsettings.Local.json");
+        Console.WriteLine(configuration["port"]);
+        Console.WriteLine(configuration["slot"]);
+        Console.WriteLine(configuration["pass"]);
+        url = "wss://archipelago.gg";
+        port = configuration["port"];
+        slot = configuration["slot"];
+        password = configuration["pass"];
+
+#else
+        // start AP Login
+
+        Console.WriteLine("Enter AP Domain: (archipelago.gg)");
         string lineUrl = Console.ReadLine();
 
         url = string.IsNullOrWhiteSpace(lineUrl) ? "archipelago.gg" : lineUrl;
@@ -103,25 +132,38 @@ internal class Program
             Console.WriteLine("Slot name cannot be empty. Please provide a valid slot name.");
             return;
         }
+#endif
+
+        if (string.IsNullOrWhiteSpace(slot))
+        {
+            Console.WriteLine("Slot name cannot be empty. Please provide a valid slot name.");
+            return;
+        }
 
         Console.WriteLine("Got the details! Attempting to connect to Archipelagos main server");
 
-        // Register event handlers
-        archipelagoClient.Connected += (sender, args) => APHelpers.OnConnectedLogic(sender, args, archipelagoClient);
-        archipelagoClient.Disconnected += (sender, args) => APHelpers.OnDisconnectedLogic(sender, args, archipelagoClient);
-        archipelagoClient.ItemReceived += (sender, args) => APHelpers.ItemReceivedLogic(sender, args, archipelagoClient);
-        archipelagoClient.MessageReceived += (sender, args) => APHelpers.Client_MessageReceivedLogic(sender, args, archipelagoClient);
-        archipelagoClient.LocationCompleted += (sender, args) => APHelpers.Client_LocationCompletedLogic(sender, args, archipelagoClient);
-        archipelagoClient.EnableLocationsCondition = () => Helpers.APHelpers.isInTheGame();
-
-        var cts = new CancellationTokenSource();
         try
         {
-            // 
+            archipelagoClient.Connected += (sender, args) => APHelpers.OnConnectedLogic(sender, args, archipelagoClient);
+            archipelagoClient.Disconnected += (sender, args) => APHelpers.OnDisconnectedLogic(sender, args, archipelagoClient);
+
             await archipelagoClient.Connect(url + ":" + port, gameName);
-            Console.WriteLine("Connected. Attempting to Log in...");
+            Thread.Sleep(1000);
             await archipelagoClient?.Login(slot, password);
-            Console.WriteLine("Logged in!");
+            int retryCount = 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"\nAn error occurred while connecting to Archipelago: {ex.Message}");
+#if DEBUG
+            Console.WriteLine(ex); // Print full exception for debugging
+#endif
+            Console.ReadKey();
+            Environment.Exit(1);
+        }
+
+        try
+        {
 
             while (archipelagoClient.CurrentSession == null)
             {
@@ -129,57 +171,151 @@ internal class Program
                 Thread.Sleep(1000);
             }
 
+            // Register event handlers
+            archipelagoClient.ItemManager.ItemReceived += (sender, args) => APHelpers.ItemReceivedLogic(sender, args, archipelagoClient);
+            archipelagoClient.MessageReceived += (sender, args) => APHelpers.Client_MessageReceivedLogic(sender, args, archipelagoClient);
+            archipelagoClient.LocationManager.LocationCompleted += (sender, args) => APHelpers.Client_LocationCompletedLogic(sender, args, archipelagoClient);
+            archipelagoClient.LocationManager.EnableLocationsCondition = () => APHelpers.isInTheGame();
             archipelagoClient.CurrentSession.Locations.CheckedLocationsUpdated += APHelpers.Locations_CheckedLocationsUpdated;
+
 
             GameLocations = LocationHelpers.BuildLocationList(archipelagoClient.Options);
 
-            // underscore runs the monitor locations task in the background. You can cane _= to await if you want to watch it more directly. 
-            _ = archipelagoClient.MonitorLocations(GameLocations); 
+            GoalOptions goal_option = PlayerStateHelpers.GetPlayerOption<GoalOptions>(archipelagoClient.Options, "goal");
 
-            // Simple commands for interacting can go here
-            while (!cts.Token.IsCancellationRequested)
+            // pre-run scripts for dealing with different victory conditions
+            switch (goal_option)
             {
-                var input = Console.ReadLine();
-                if (input?.Trim().ToLower() == "exit")
-                {
-                    cts.Cancel();
+                case GoalOptions.KILL_ALL_COLOSSI:
                     break;
-                }
-                else if (input?.Trim().ToLower().Contains("hint") == true)
-                {
+                case GoalOptions.HUNT_ALL_LIZARDS:
+                    break;
+                case GoalOptions.SOUL_SHARD_SEARCH:
+                    break;
+            }
 
-                    string hintString = input?.Trim().ToLower() == "hint" ? "!hint" : $"!hint {input.Substring(5).Trim()}";
-                    archipelagoClient.SendMessage(hintString);
-                }
-                else if (input?.Trim().ToLower() == "update")
+            // pre-launch example
+            //PlayerStateHelpers.OnGameLoaded(archipelagoClient);
+
+            // listener example
+            //MapHelper.StartMapProgressionListener(_cancellationTokenMapListener, archipelagoClient);
+
+            while (!APHelpers.isInTheGame())
+            {
+                Console.Clear();
+                Console.WriteLine("Waiting to enter game");
+                Thread.Sleep(5000);
+            }
+            Console.Clear();
+            Console.WriteLine("Listening for locations...");
+
+
+            var gameOverlay = new WindowsOverlayService(new OverlayOptions
+            {
+                XOffset = 50,
+                YOffset = 500,
+                FontSize = 12,
+                DefaultTextColor = Archipelago.Core.Util.Overlay.Color.Yellow,
+                FadeDuration = 10.0f,
+            });
+
+            archipelagoClient.IntializeOverlayService(gameOverlay);
+
+            try
+            {
+
+                await archipelagoClient.ReceiveReady();
+
+                gameOverlay.AddTextPopup("Shadow of the Colossus is ready to go.");
+
+                _ = archipelagoClient.MonitorLocationsAsync(GameLocations, _cancellationTokenSource.Token);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An unexpected error occurred while monitoring locations: {ex.Message}");
+                Console.WriteLine(ex);
+            }
+
+            while (!_cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                try
                 {
-                    if (archipelagoClient.LocationState.CompletedLocations != null)
+                    var input = Console.ReadLine();
+                    if (input?.Trim().ToLower() == "exit")
                     {
-                        PlayerStateHelpers.UpdatePlayerState(archipelagoClient.CurrentSession.Items.AllItemsReceived);
+                        _cancellationTokenSource.Cancel();
+                    }
+                    else if (input?.Trim().ToLower() == "options")
+                    {
+                        CliHelpers.RunOptions(archipelagoClient);
+                    }
+                    else if (input?.Trim().ToLower() == "status")
+                    {
+                        CliHelpers.RunStatus(archipelagoClient);
+                    }
+                    else if (input?.Trim().ToLower() == "debug")
+                    {
+                        CliHelpers.DebugInformation(archipelagoClient);
+                    }
+                    else if (input?.Trim().ToLower().Contains("release") == true)
+                    {
+                        Console.WriteLine("Manually sending goal completion ping to Archipelago server...");
+                        archipelagoClient.SendGoalCompletion();
+                    }
+                    else if (input?.Trim().ToLower().Contains("hint") == true)
+                    {
+                        string hintString = input?.Trim().ToLower() == "hint" ? "!hint" : $"!hint {input.Substring(5).Trim()}";
+                        archipelagoClient.SendMessage(hintString);
+                    }
+                    else if (input?.Trim().ToLower() == "update")
+                    {
+                        PlayerStateHelpers.UpdatePlayerState(archipelagoClient);
                         Console.WriteLine($"Player state updated. Total Count: {archipelagoClient.CurrentSession.Items.AllItemsReceived.Count}");
+
+#if DEBUG
+                        foreach (ItemInfo item in archipelagoClient.CurrentSession.Items.AllItemsReceived)
+                        {
+                            Console.WriteLine($"id: {item.ItemId} - {item.ItemName}");
+                        }
+#endif
                     }
-                    else
+                    else if (input?.Trim().ToLower().Contains("warp") == true)
                     {
-                        Console.WriteLine("Cannot update player state: GameState or CompletedLocations is null.");
+                        string raw = input.Trim().Substring(5).Trim();
+                        if (ushort.TryParse(raw, System.Globalization.NumberStyles.HexNumber, null, out ushort warpValue))
+                        {
+                            // warp to grid point. 
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid warp value. Use: warp [Grid Coordinate]");
+                        }
+
+                    }
+                    else if (!string.IsNullOrWhiteSpace(input))
+                    {
+                        Console.WriteLine($"Unknown command: '{input}'");
                     }
                 }
-                else if (!string.IsNullOrWhiteSpace(input))
+                catch (Exception ex)
                 {
-                    Console.WriteLine($"Unknown command: '{input}'");
+                    _cancellationTokenSource.Cancel();
+                    Console.WriteLine("The system has crashed. (Probably broken connection");
                 }
             }
+
+            Console.WriteLine("Shutting down due to connection issues.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An error occurred while connecting to Archipelago: {ex.Message}");
+            _cancellationTokenSource.Cancel();
+            Console.WriteLine($"An unexpected error occurred while connecting to Archipelago: {ex.Message}");
             Console.WriteLine(ex); // Print full exception for debugging
         }
         finally
         {
             // Perform any necessary cleanup here
             Console.WriteLine("Shutting down...");
-
         }
-
     }
 }
