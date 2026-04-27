@@ -228,6 +228,8 @@ public class App
 
             GameStateHelpers.SetNewGamePlus(_cancellationTokenSource);
             GameStateHelpers.SetGameBeaten(_cancellationTokenSource);
+            GameStateHelpers.SetColossiKilled(_cancellationTokenSource);
+            GameStateHelpers.CheckStatues(archipelagoClient, _cancellationTokenSource);
 
             while (!APHelpers.isInTheGame())
             {

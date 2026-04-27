@@ -18,7 +18,16 @@ namespace SotcArchipelago
         public const uint NewGamePlusFlag = 0x12de14c;
         public const uint GameClearedCount = 0x012da3f4;
 
-        public const uint NumberOfColossiKilled = 0x012de128;
+        public const uint NumberOfColossiKilled = 0x012de148;
+        public const uint CheckStatues1 = 0x012D9B55;
+        public const uint CheckStatues2 = 0x012D9B56;
+
+        public const uint ColossusVisibility1 = 0x0012D9B55;
+        public const uint ColossusVisibility2 = 0x0012D9B56;
+
+        public const uint ColossusGraves1 = 0x012d9b5b; // 3, 5, 9
+        public const uint ColossusGraves2 = 0x012d9b5c; // 1, 2, 4, 6, 11, 12, 13, 15
+        public const uint ColossusGraves3 = 0x012d9b5d; // 7, 8, 10, 14, 16
 
         public const uint KillPlayer = 0x012D9BCF; // Set to FF
 
