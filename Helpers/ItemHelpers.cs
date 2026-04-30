@@ -11,40 +11,15 @@ namespace SotcArchipelago.Helpers
         private static bool TryGiveItem(ItemInfo item, ArchipelagoClient client)
         {
             //// Try to handle the item based on type
-            //if (result.Contains("Teleport"))
-            //    return handleTeleportItem();
-            //else if (result.Contains("Rood Inverse"))
-            //    return handleRoodInverseItem();
-            //else if (result.Contains("Blood Sin"))
-            //    return handleBloodSinProgession();
-            //else if (item.ItemName.Contains("Progressive"))
-            //    return ItemHelpers.handleGrimoireUnlock(item, client.CurrentSession.Items.AllItemsReceived);
-            //else if (ItemHelpers.ItemReference.Any(itm => itm.Value == item.ItemName && itm.Value.Contains("Grimoire")))
-            //    return ItemHelpers.handleGrimoireUnlock(item, client.CurrentSession.Items.AllItemsReceived);
-            //else if (ItemHelpers.ItemReference.Any(itm => itm.Value == item.ItemName))
-            //    return ItemHelpers.handleInventoryItem(item);
-            //else if (ItemHelpers.GemReference.Any(itm => itm.Value == item.ItemName))
-            //    return ItemHelpers.handleInventoryGem(item);
-            //else if (ItemHelpers.ArmorReference.Any(itm => itm.Value == result))
-            //    return ItemHelpers.handleInventoryArmor(item);
-            //else if (ItemHelpers.ShieldReference.Any(itm => itm.Value == result))
-            //    return ItemHelpers.handleInventoryShield(item);
-            //else if (ItemHelpers.CraftingBladeReference.Any(itm => itm.Value == result))
-            //    return ItemHelpers.handleInventoryCraftingBlade(item);
-            //else if (ItemHelpers.CraftingGripReference.Any(itm => itm.Value == item.ItemName))
-            //    return ItemHelpers.handleInventoryCraftingGrip(item);
-            //else if (ItemHelpers.ChainAbilityUnlockReference.Any(itm => itm.Key == item.ItemName))
-            //    return ItemHelpers.handleChainAbility(item.ItemName);
-            //else if (ItemHelpers.DefenceAbilityUnlockReference.Any(itm => itm.Key == item.ItemName))
-            //    return ItemHelpers.handleDefenceAbility(item.ItemName);
-            //else if (ItemHelpers.BreakArtsFlattenedDictionary.Any(itm => itm.Key == item.ItemName))
-            //    return ItemHelpers.handleBreakArt(item.ItemName);
-            //else
-            //{
-            //    Console.WriteLine($"Item not recognised. ({item.ItemName}) Skipping");
-            //    return true; // Skip unrecognized items
-            //}
-            return true;
+            if (item.ItemName.Contains("Sliver of Hope HP"))
+                return PlayerStateHelpers.UpdatePlayerHealth(client);
+            else if (item.ItemName.Contains("Sliver of Courage Stamina"))
+                return PlayerStateHelpers.UpdatePlayerStamina(client);
+            else
+            {
+                Console.WriteLine($"Item not recognised. ({item.ItemName}) Skipping");
+                return true; // Skip unrecognized items
+            }
         }
 
         public static void ProcessPendingItems(ArchipelagoClient client)
@@ -85,7 +60,7 @@ namespace SotcArchipelago.Helpers
                     // Inventory full - stop processing and wait
                     Kokuban.AnsiEscape.AnsiStyle bg = Chalk.BgMagenta;
                     Kokuban.AnsiEscape.AnsiStyle fg = Chalk.White;
-                    Console.WriteLine(bg + (fg + $"⚠️ Cannot process item {itemToProcess.ItemName} - inventory full. Will retry later."));
+                    Console.WriteLine(bg + (fg + $"⚠️ Cannot process item {itemToProcess.ItemName}"));
                     break; // Exit the loop, we'll try again later
                 }
             }

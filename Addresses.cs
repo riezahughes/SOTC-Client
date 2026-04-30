@@ -9,10 +9,11 @@ namespace SotcArchipelago
         // mark all your addresses here for easy access. Then you can just use Addresses.test, as an example.
         public const uint test = 0x000123123;
 
-        public const uint ItemIndexStorage = 0x00ABCDEF; // This is the address where we will store the current item index
+        public const uint ItemIndexStorage = 0x012D9BBE; // This is the address where we will store the current item index
 
         public const uint InGameCheck = 0x012d9bc0;
-        public const uint SaveDataPopup = 0x012DA4F0;
+        public const uint ShrineDataPopup = 0x012DA4F0;
+        public const uint SaveDataBar = 0x01314CA0; // whenever the bar starts saving
         public const uint IsFightingColossi = 0x012de128; // Whenever it's NOT 0x00
 
         public const uint NewGamePlusFlag = 0x12de14c;
@@ -28,6 +29,9 @@ namespace SotcArchipelago
         public const uint ColossusGraves1 = 0x012d9b5b; // 3, 5, 9
         public const uint ColossusGraves2 = 0x012d9b5c; // 1, 2, 4, 6, 11, 12, 13, 15
         public const uint ColossusGraves3 = 0x012d9b5d; // 7, 8, 10, 14, 16
+
+        public const uint SkipCutscenes1 = 0x012D9B88;
+        public const uint SkipCutscenes2 = 0x012D9B88;
 
         public const uint KillPlayer = 0x012D9BCF; // Set to FF
 
@@ -165,6 +169,23 @@ namespace SotcArchipelago
         public const uint FruitG8NorthEast2 = 0x12d9c88; // bits 0-5
 
         // boss kill addresses
+
+        // 1 Minotaur A — Sigil of the First Awakening
+        // 2 Mammoth — Sigil of Burdened Earth
+        // 3 Knight — Sigil of the Fallen Oath
+        // 4 Kirin — Sigil of Veiled Fear
+        // 5 Bird — Sigil of the Skybound Silence
+        // 6 Minotaur B — Sigil of the Hollow Shrine
+        // 7 Eel — Sigil of the Sunken Pulse
+        // 8 Yamori B — Sigil of the Watching Walls
+        // 9 Kame — Sigil of the Sealed Core
+        // 10 Narga — Sigil of the Devouring Wind
+        // 11 Leo — Sigil of the Broken Courage
+        // 12 Poseidon — Sigil of the Drowned Throne
+        // 13 Snake — Sigil of Endless Horizon
+        // 14 Cerberus — Sigil of Ruined Pride
+        // 15 Minotaur C — Sigil of the Bound Colossus
+        // 16 Evis — Sigil of the Final Blasphemy
 
         public const uint BossCol1MintaurAKill = 0x00;
         public const uint BossCol2MammothKill = 0x00;

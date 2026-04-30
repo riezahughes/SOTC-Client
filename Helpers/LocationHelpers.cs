@@ -31,6 +31,19 @@ namespace Helpers
             {"J", 0x49},
         };
 
+        public static Dictionary<byte, string> BytesToCharacter = new Dictionary<byte, string>()
+        {
+            {0x41, "A" },
+            {0x42, "B" },
+            {0x43, "C" },
+            {0x44, "D" },
+            {0x45, "E" },
+            {0x46, "F" },
+            {0x47, "G" },
+            {0x48, "H" },
+            {0x49, "J" },
+        };
+
         public static List<ILocation> BuildLocationList(Dictionary<string, object> options)
         {
             int base_id = 90000000;
@@ -257,7 +270,7 @@ namespace Helpers
                             {
                                 Id = -1,
                                 Name = "Shrine Interaction",
-                                Address = Addresses.SaveDataPopup,
+                                Address = Addresses.ShrineDataPopup,
                                 CheckType = LocationCheckType.Byte,
                                 CompareType = LocationCheckCompareType.Match,
                                 CheckValue = "1"

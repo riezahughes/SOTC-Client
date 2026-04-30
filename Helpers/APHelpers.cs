@@ -4,6 +4,7 @@ using Archipelago.Core.Util;
 using Kokuban;
 using Serilog;
 using SotcArchipelago;
+using SotcArchipelago.Helpers;
 
 namespace Helpers
 {
@@ -58,11 +59,8 @@ namespace Helpers
 
         public static void ItemReceivedLogic(object sender, ItemReceivedEventArgs args, ArchipelagoClient client)
         {
-            if (client.CurrentSession == null)
-            {
-                return;
-            }
-            Console.WriteLine("Item Received");
+            PROCESSING_ITEM_LIST = true;
+            ItemHelpers.ProcessPendingItems(client);
         }
 
         public static void Client_MessageReceivedLogic(object sender, MessageReceivedEventArgs e, ArchipelagoClient client, string slot)

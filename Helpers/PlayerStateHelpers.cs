@@ -30,10 +30,40 @@ namespace Helpers
 
             return defaultValue;
         }
+
+        public static bool UpdatePlayerStamina(ArchipelagoClient client)
+        {
+
+            int staminaCount = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Sliver of Courage Stamina"));
+
+            float playerStamina = 100.0f + staminaCount;
+
+            byte[] bytes = BitConverter.GetBytes(playerStamina);
+
+            Memory.WriteByteArray(Addresses.MaxStamina, bytes);
+
+            return true;
+
+        }
+
+        public static bool UpdatePlayerHealth(ArchipelagoClient client)
+        {
+            int healthCount = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Sliver of Hope HP"));
+
+            float playerHealth = 100.0f + healthCount;
+
+            byte[] bytes = BitConverter.GetBytes(playerHealth);
+
+            Memory.WriteByteArray(Addresses.MaxHealth, bytes);
+
+            return true;
+        }
+
         public static void KillPlayer()
         {
             //TODO: Kill the player logic goes here
             Console.WriteLine("Ur ded kiddo");
+            Memory.WriteByte(Addresses.KillPlayer, 0xfF);
         }
 
         public static void UpdatePlayerState(ArchipelagoClient client)
