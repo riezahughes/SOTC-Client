@@ -174,7 +174,7 @@ namespace Helpers
             { 13, (0xE0, 0xFE, 0x3F) },
             { 14, (0xE0, 0xFF, 0x3B) },
             { 15, (0xE0, 0xEF, 0x3F) },
-            { 16, (0xE0, 0xFF, 0x1F) },
+            { 16, (0x00, 0x00, 0x20) },
         };
 
         public const byte GravesAllUnloaded1 = 0xE0;
@@ -194,6 +194,21 @@ namespace Helpers
 
             if (!BossStateInGridDictionary.TryGetValue(gridLetter + gridNumber, out var dictVal))
                 return;
+
+            if ((gridLetter + gridNumber) == "F8" && PlayerStateHelpers.HasKilledAllColossi(client))
+            {
+
+                var finalBoss = ColossusLoadedBytes[16];
+
+                Memory.WriteByte(Addresses.ColossusGraves1, finalBoss.graves1);
+                Memory.WriteByte(Addresses.ColossusGraves2, finalBoss.graves2);
+                Memory.WriteByte(Addresses.ColossusGraves3, finalBoss.graves3);
+                Memory.WriteByte(Addresses.CheckStatues1, 0x00);
+                Memory.WriteByte(Addresses.CheckStatues2, 0x20);
+
+                Memory.WriteByte(Addresses.InGameCheck, 0x0f);
+                return;
+            }
 
             // 2. Non-colossus grid → leave state alone, the previous colossus grid's
             //    write still applies and nothing in this area cares
@@ -239,16 +254,7 @@ namespace Helpers
         {
             var check = Memory.ReadByte(Addresses.InGameCheck);
 
-            // 0xFF = not in-game (menu / loading). Don't touch anything.
             if (check == 0xFF) return;
-
-            // Removed:
-            //   CheckStatues1 = 0x00, CheckStatues2 = 0x80
-            //     → was the cheat-code "15 killed" state, made the game recompute
-            //       InGameCheck toward 0x0F and overwrite our writes.
-            //   ColossusGraves1/2/3 baseline writes
-            //     → redundant; SetCurrentColossiState writes the bytes it needs.
-
             SetCurrentColossiState(client);
         }
 
@@ -318,49 +324,14 @@ namespace Helpers
                 Addresses.GridMapFull,
                 () =>
                 {
-                    // 1. Grab the new value immediately
                     var gridValue = Memory.ReadByte(Addresses.GridMapFull);
-
-                    // 2. Update the tracking variable BEFORE re-registering
-                    // This is the most important step to prevent the "double fire"
                     _gridPreviousValue = gridValue;
-
-                    // 3. Perform your logic
                     SetCurrentSigilState(client);
-
-                    // 4. Re-register the monitor for the NEXT change
                     SetColossiGridUpdate(client, cts);
                 },
                 value => value != _gridPreviousValue);
         }
 
-        public static void CheckStatues(ArchipelagoClient client, CancellationTokenSource cts)
-        {
-            if (cts.Token.IsCancellationRequested) return;
-
-            //Memory.MonitorAddressForAction<byte>(
-            //    Addresses.ColossusVisibility1,
-            //    () =>
-            //    {
-            //        // Collosi load state. As you get keys, these should change
-            //        Memory.Write(Addresses.ColossusVisibility1, 0xFF);
-            //        Memory.Write(Addresses.ColossusVisibility2, 0xFF);
-
-            //    },
-            //value => value != 0xFF);
-
-            //Memory.MonitorAddressForAction<byte>(
-            //    Addresses.ColossusVisibility2,
-            //    () =>
-            //    {
-            //        // Collosi load state. As you get keys, these should change
-            //        Memory.Write(Addresses.ColossusVisibility1, 0xFF);
-            //        Memory.Write(Addresses.ColossusVisibility2, 0xFF);
-            //        SetCurrentSigilState(client);
-            //        CheckStatues(client, cts);
-            //    },
-            //value => value != 0xFF);
-        }
 
         public static void SetNewGamePlus(CancellationTokenSource cts)
         {

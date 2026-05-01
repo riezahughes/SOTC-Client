@@ -26,7 +26,14 @@ namespace SotcArchipelago.Helpers
             }
             else if (item.ItemName.Contains("Sigil"))
             {
-                Console.WriteLine("Recieved Sigil!");
+                SigilNameToColossus.TryGetValue(item.ItemName, out int colossusIndex);
+                Console.WriteLine($"You can now fight Colossus {colossusIndex}!");
+                return true;
+            }
+
+            else if (item.ItemName.Contains("Shard"))
+            {
+                Console.WriteLine("Recieved Shard!");
                 return true;
             }
             else

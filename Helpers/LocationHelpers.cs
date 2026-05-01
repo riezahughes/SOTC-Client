@@ -334,6 +334,64 @@ namespace Helpers
                             location_index++;
                             continue;
                         }
+                        else if (loc.Name.Contains("Kill") && loc is BossLocationData bossLoc)
+                        {
+
+                            List<ILocation> conditionalChoice = new List<ILocation>();
+
+                            conditionalChoice.Add(new Location()
+                            {
+                                Id = -1,
+                                Name = "Grid Check Letter",
+                                Address = Addresses.GridMapLetter,
+                                CheckType = LocationCheckType.Byte,
+                                CompareType = LocationCheckCompareType.Match,
+                                CheckValue = CharacterToBytes[bossLoc.GridLetter].ToString()
+                            });
+
+                            conditionalChoice.Add(new Location()
+                            {
+                                Id = -1,
+                                Name = "Grid Check Number",
+                                Address = Addresses.GridMapNumber,
+                                CheckType = LocationCheckType.Byte,
+                                CompareType = LocationCheckCompareType.Match,
+                                CheckValue = bossLoc.GridNumber
+                            });
+
+                            conditionalChoice.Add(new Location()
+                            {
+                                Id = -1,
+                                Name = "InBossFight",
+                                Address = Addresses.IsFightingColossi,
+                                CheckType = LocationCheckType.Byte,
+                                CompareType = LocationCheckCompareType.GreaterThan,
+                                CheckValue = "0"
+                            });
+
+                            conditionalChoice.Add(new Location()
+                            {
+                                Id = -1,
+                                Name = "Boss HP",
+                                Address = Addresses.ColossusHealth,
+                                CheckType = LocationCheckType.UInt,
+                                CompareType = LocationCheckCompareType.Match,
+                                CheckValue = "0"
+                            });
+
+                            CompositeLocation location = new CompositeLocation()
+                            {
+                                Name = loc.Name,
+                                Id = locationId,
+                                CheckType = LocationCheckType.AND,
+                                Conditions = conditionalChoice,
+                            };
+
+                            locations.Add(location);
+                            location_index++;
+                            continue;
+
+                        }
                         else
                         {
 
@@ -855,7 +913,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossD1Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossD1 = new List<GenericLocationData>() {
-            new GenericLocationData("Eel Kill - Col. 7", Addresses.BossCol7EelKill, "1", LocationCheckType.Bit),
+            new BossLocationData("Eel Kill - Col. 7", Addresses.BossCol7EelKill, "D", "1"),
         };
             return bossD1;
         }
@@ -863,7 +921,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossF1Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossF1 = new List<GenericLocationData>() {
-            new GenericLocationData("Leo Kill - Col. 11", Addresses.BossCol11LeoKill, "1", LocationCheckType.Bit),
+            new BossLocationData("Leo Kill - Col. 11", Addresses.BossCol11LeoKill, "F", "1"),
         };
             return bossF1;
         }
@@ -871,7 +929,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossG1Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossG1 = new List<GenericLocationData>() {
-            new GenericLocationData("Minotaur C Kill - Col. 15", Addresses.BossCol15MinotaurCKill, "1", LocationCheckType.Bit),
+            new BossLocationData("Minotaur C Kill - Col. 15", Addresses.BossCol15MinotaurCKill, "G", "1"),
         };
             return bossG1;
         }
@@ -879,7 +937,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossC2Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossC2 = new List<GenericLocationData>() {
-            new GenericLocationData("Cerberus Kill - Col. 14", Addresses.BossCol14CerberusKill, "2", LocationCheckType.Bit),
+            new BossLocationData("Cerberus Kill - Col. 14", Addresses.BossCol14CerberusKill, "C","2"),
         };
             return bossC2;
         }
@@ -887,7 +945,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossE2Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossE2 = new List<GenericLocationData>() {
-            new GenericLocationData("Knight Kill - Col. 3", Addresses.BossCol3KnightKill, "2", LocationCheckType.Bit),
+            new BossLocationData("Knight Kill - Col. 3", Addresses.BossCol3KnightKill, "E", "2"),
         };
             return bossE2;
         }
@@ -895,7 +953,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossG2Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossG2 = new List<GenericLocationData>() {
-            new GenericLocationData("Poseidon Kill - Col. 12", Addresses.BossCol12PoseidonKill, "2", LocationCheckType.Bit),
+            new BossLocationData("Poseidon Kill - Col. 12", Addresses.BossCol12PoseidonKill, "G","2"),
         };
             return bossG2;
         }
@@ -903,7 +961,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossD3Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossD3 = new List<GenericLocationData>() {
-            new GenericLocationData("Kame Kill - Col. 9", Addresses.BossCol9KameKill, "3", LocationCheckType.Bit),
+            new BossLocationData("Kame Kill - Col. 9", Addresses.BossCol9KameKill, "D", "3"),
         };
             return bossD3;
         }
@@ -911,7 +969,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossF3Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossF3 = new List<GenericLocationData>() {
-            new GenericLocationData("Mammoth Kill - Col. 2", Addresses.BossCol2MammothKill, "3", LocationCheckType.Bit),
+            new BossLocationData("Mammoth Kill - Col. 2", Addresses.BossCol2MammothKill, "F", "3" ),
         };
             return bossF3;
         }
@@ -919,7 +977,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossB4Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossB4 = new List<GenericLocationData>() {
-            new GenericLocationData("Narga Kill - Col. 10", Addresses.BossCol10NargaKill, "4", LocationCheckType.Bit),
+            new BossLocationData("Narga Kill - Col. 10", Addresses.BossCol10NargaKill, "B", "4"),
         };
             return bossB4;
         }
@@ -927,7 +985,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossH4Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossH4 = new List<GenericLocationData>() {
-            new GenericLocationData("Bird Kill - Col. 5", Addresses.BossCol5BirdKill, "4", LocationCheckType.Bit),
+            new BossLocationData("Bird Kill - Col. 5", Addresses.BossCol5BirdKill, "H","4"),
         };
             return bossH4;
         }
@@ -935,7 +993,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossF5Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossF5 = new List<GenericLocationData>() {
-            new GenericLocationData("Mintaur A Kill - Col. 1", Addresses.BossCol1MintaurAKill, "5", LocationCheckType.Bit),
+            new BossLocationData("Mintaur A Kill - Col. 1", Addresses.BossCol1MintaurAKill, "F", "5"),
         };
             return bossF5;
         }
@@ -943,7 +1001,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossG5Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossG5 = new List<GenericLocationData>() {
-            new GenericLocationData("Kirin Kill - Col. 4", Addresses.BossCol4KirinKill, "5", LocationCheckType.Bit),
+            new BossLocationData("Kirin Kill - Col. 4", Addresses.BossCol4KirinKill, "G", "5"),
         };
             return bossG5;
         }
@@ -951,7 +1009,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossD6Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossD6 = new List<GenericLocationData>() {
-            new GenericLocationData("Minotaur B Kill - Col. 6", Addresses.BossCol6MinotaurBKill, "6", LocationCheckType.Bit),
+            new BossLocationData("Minotaur B Kill - Col. 6", Addresses.BossCol6MinotaurBKill, "D", "6"),
         };
             return bossD6;
         }
@@ -959,7 +1017,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossE6Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossE6 = new List<GenericLocationData>() {
-            new GenericLocationData("Snake Kill - Col. 13", Addresses.BossCol13SnakeKill, "6", LocationCheckType.Bit),
+            new BossLocationData("Snake Kill - Col. 13", Addresses.BossCol13SnakeKill, "E","6"),
         };
             return bossE6;
         }
@@ -967,7 +1025,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossG6Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossG6 = new List<GenericLocationData>() {
-            new GenericLocationData("Yamori B Kill - Col. 8", Addresses.BossCol8YamoriBKill, "6", LocationCheckType.Bit),
+            new BossLocationData("Yamori B Kill - Col. 8", Addresses.BossCol8YamoriBKill, "E", "6"),
         };
             return bossG6;
         }
@@ -975,7 +1033,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossF8Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossF8 = new List<GenericLocationData>() {
-            new GenericLocationData("Evis Kill - Col. 16", Addresses.BossCol16EvisKill, "8", LocationCheckType.Bit),
+            new BossLocationData("Evis Kill - Col. 16", Addresses.BossCol16EvisKill, "G","6"),
         };
             return bossF8;
         }

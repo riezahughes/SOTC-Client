@@ -14,7 +14,9 @@ namespace SotcArchipelago
         public const uint InGameCheck = 0x012d9bc0;
         public const uint ShrineDataPopup = 0x012DA4F0;
         public const uint SaveDataBar = 0x01314CA0; // whenever the bar starts saving
+
         public const uint IsFightingColossi = 0x012de128; // Whenever it's NOT 0x00
+        public const uint ColossusHealth = 0x1466bd0;
 
         public const uint NewGamePlusFlag = 0x12de14c;
         public const uint GameClearedCount = 0x012da3f4;

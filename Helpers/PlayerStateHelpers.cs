@@ -31,6 +31,11 @@ namespace Helpers
             return defaultValue;
         }
 
+        public static bool HasKilledAllColossi(ArchipelagoClient client)
+        {
+            return true;
+        }
+
         public static bool UpdatePlayerStamina(ArchipelagoClient client)
         {
 
