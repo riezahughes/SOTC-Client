@@ -1,4 +1,4 @@
-using Archipelago.Core;
+﻿using Archipelago.Core;
 using Archipelago.Core.Util;
 using SotcArchipelago;
 using SotcArchipelago.Helpers;
@@ -111,7 +111,7 @@ namespace Helpers
                 { "E3", ( "", 0x00) },
                 { "E4", ( "", 0x00) },
                 { "E5", ( "", 0x00) },
-                { "E6", ( "Sigil of Endless Horizon", 0x0d) },
+                { "E6", ( "Sigil of Endless Horizon", 0x0e) },
                 { "E7", ( "", 0x00) },
                 { "E8", ( "", 0x00) },
                 { "F1", ( "Sigil of the Broken Courage", 0x0b) },
@@ -156,63 +156,100 @@ namespace Helpers
                 { "J8", ( "", 0x00) },
         };
 
+        public static readonly Dictionary<int, (byte graves1, byte graves2, byte graves3)> ColossusLoadedBytes
+            = new Dictionary<int, (byte, byte, byte)>
+        {
+            { 1,  (0xE0, 0xFB, 0x3F) },
+            { 2,  (0xE0, 0xFD, 0x3F) },
+            { 3,  (0xC0, 0xFF, 0x3F) },
+            { 4,  (0xE0, 0xDF, 0x3F) },
+            { 5,  (0xA0, 0xFF, 0x3F) },
+            { 6,  (0xE0, 0xF7, 0x3F) },
+            { 7,  (0xE0, 0xFF, 0x2F) },
+            { 8,  (0xE0, 0xFF, 0x37) },
+            { 9,  (0x60, 0xFF, 0x3F) },
+            { 10, (0xE0, 0xFF, 0x3E) },
+            { 11, (0xE0, 0xBF, 0x3F) },
+            { 12, (0xE0, 0x7F, 0x3F) },
+            { 13, (0xE0, 0xFE, 0x3F) },
+            { 14, (0xE0, 0xFF, 0x3B) },
+            { 15, (0xE0, 0xEF, 0x3F) },
+            { 16, (0xE0, 0xFF, 0x1F) },
+        };
+
+        public const byte GravesAllUnloaded1 = 0xE0;
+        public const byte GravesAllUnloaded2 = 0xFF;
+        public const byte GravesAllUnloaded3 = 0x3F;
+
         // the in-game check is used as a current colossus value 
         // if it's set to the number of the colossus, the grave won't appear.
         // If
 
         public static void SetCurrentColossiState(ArchipelagoClient client)
         {
+            // 1. Identify current grid
             var gridLetterInHex = Memory.ReadByte(Addresses.GridMapLetter);
             string gridLetter = LocationHelpers.BytesToCharacter[gridLetterInHex];
             string gridNumber = Memory.ReadByte(Addresses.GridMapNumber).ToString();
 
-            var dictVal = BossStateInGridDictionary[gridLetter + gridNumber];
+            if (!BossStateInGridDictionary.TryGetValue(gridLetter + gridNumber, out var dictVal))
+                return;
 
-            var sigilItems = client.CurrentSession.Items.AllItemsReceived
-                .Where(item => item.ItemName.Contains(dictVal.sigil, StringComparison.OrdinalIgnoreCase));
+            // 2. Non-colossus grid → leave state alone, the previous colossus grid's
+            //    write still applies and nothing in this area cares
+            if (string.IsNullOrEmpty(dictVal.sigil))
+                return;
 
+            if (!ItemHelpers.SigilNameToColossus.TryGetValue(dictVal.sigil, out int currentBossId))
+                return;
 
-            foreach (var sigilName in sigilItems)
+            // 3. Sigil ownership check
+            bool hasCurrentSigil = client.CurrentSession.Items.AllItemsReceived
+                .Any(item => item.ItemName.Equals(dictVal.sigil, StringComparison.OrdinalIgnoreCase));
+
+            // 4. ALWAYS write InGameCheck to this grid's colossus (0-indexed).
+            //    The locked-invisible state requires InGameCheck to match the grid's colossus.
+            //    Without this write, no-sigil players see a grave instead of nothing.
+            Memory.WriteByte(Addresses.InGameCheck, (byte)(dictVal.value - 1));
+
+            // 5. State table:
+            //    has sigil  → bit cleared (boss loads, no grave)
+            //    no sigil   → bit set + matching InGameCheck (nothing visible)
+            if (hasCurrentSigil && ColossusLoadedBytes.TryGetValue(currentBossId, out var b))
             {
-                if (ItemHelpers.SigilNameToColossus.TryGetValue(sigilName.ItemName, out int bossId))
-                {
-
-                    if (BossToBitDictionary.TryGetValue(bossId, out var colChoice))
-                    {
+                Memory.WriteByte(Addresses.ColossusGraves1, b.graves1);
+                Memory.WriteByte(Addresses.ColossusGraves2, b.graves2);
+                Memory.WriteByte(Addresses.ColossusGraves3, b.graves3);
 #if DEBUG
-                        Console.WriteLine($"Setting Collosi {bossId} ");
+                Console.WriteLine($"Grid {gridLetter}{gridNumber}: Col {currentBossId} ALIVE (sigil owned)");
 #endif
-                        Memory.WriteBit(colChoice.address, colChoice.bit, true);
-                        Memory.Write(Addresses.InGameCheck, dictVal.value);
-                    }
-                }
-            };
+            }
+            else
+            {
+                Memory.WriteByte(Addresses.ColossusGraves1, GravesAllUnloaded1);
+                Memory.WriteByte(Addresses.ColossusGraves2, GravesAllUnloaded2);
+                Memory.WriteByte(Addresses.ColossusGraves3, GravesAllUnloaded3);
+#if DEBUG
+                Console.WriteLine($"Grid {gridLetter}{gridNumber}: Col {currentBossId} LOCKED (no sigil)");
+#endif
+            }
         }
 
         public static void SetCurrentSigilState(ArchipelagoClient client)
         {
-
-
             var check = Memory.ReadByte(Addresses.InGameCheck);
 
-            Memory.WriteByte(Addresses.CheckStatues1, 0x00);
-            Memory.WriteByte(Addresses.CheckStatues2, 0x80);
+            // 0xFF = not in-game (menu / loading). Don't touch anything.
+            if (check == 0xFF) return;
 
-            // show all graves
-            //Memory.WriteByte(Addresses.ColossusGraves1, 0xFF);
-            //Memory.WriteByte(Addresses.ColossusGraves2, 0xFF);
-            //Memory.WriteByte(Addresses.ColossusGraves3, 0xDF);
+            // Removed:
+            //   CheckStatues1 = 0x00, CheckStatues2 = 0x80
+            //     → was the cheat-code "15 killed" state, made the game recompute
+            //       InGameCheck toward 0x0F and overwrite our writes.
+            //   ColossusGraves1/2/3 baseline writes
+            //     → redundant; SetCurrentColossiState writes the bytes it needs.
 
-            Memory.WriteByte(Addresses.ColossusGraves1, 0xE0);
-            Memory.WriteByte(Addresses.ColossusGraves2, 0xFF);
-            Memory.WriteByte(Addresses.ColossusGraves3, 0x3D);
-
-
-            if (check != 0xFF)
-            {
-                SetCurrentColossiState(client);
-            }
-
+            SetCurrentColossiState(client);
         }
 
         public static void SetUpNewGameListener(CancellationTokenSource cts, ArchipelagoClient client)
@@ -264,13 +301,13 @@ namespace Helpers
             if (cts.Token.IsCancellationRequested) return;
 
             Memory.MonitorAddressForAction<byte>(
-                Addresses.NumberOfColossiKilled,
+                Addresses.CheckStatues1,
                 () =>
                 {
-                    Memory.Write(Addresses.NumberOfColossiKilled, 0x0e);
-                    SetColossiKilled(cts);
+                    Memory.WriteByte(Addresses.CheckStatues1, 0x00);
+                    Memory.WriteByte(Addresses.CheckStatues2, 0x80);
                 },
-            value => value != 0x0e);
+            value => value != 0xFF);
         }
 
         public static void SetColossiGridUpdate(ArchipelagoClient client, CancellationTokenSource cts)
