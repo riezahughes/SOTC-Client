@@ -13,14 +13,91 @@ namespace SotcArchipelago.Helpers
             //// Try to handle the item based on type
             if (item.ItemName.Contains("Sliver of Hope HP"))
                 return PlayerStateHelpers.UpdatePlayerHealth(client);
+            else if (item.ItemName.Contains("Progressive Health Capacity"))
+                return PlayerStateHelpers.UpdatePlayerHealth(client);
             else if (item.ItemName.Contains("Sliver of Courage Stamina"))
                 return PlayerStateHelpers.UpdatePlayerStamina(client);
+            else if (item.ItemName.Contains("Progressive Stamina Capacity"))
+                return PlayerStateHelpers.UpdatePlayerStamina(client);
+            else if (ItemBitflags.Keys.FirstOrDefault(itm => item.ItemName.Contains(itm)) is string match)
+            {
+                GiveItem(match);
+                return true;
+            }
+            else if (item.ItemName.Contains("Sigil"))
+            {
+                Console.WriteLine("Recieved Sigil!");
+                return true;
+            }
             else
             {
                 Console.WriteLine($"Item not recognised. ({item.ItemName}) Skipping");
                 return true; // Skip unrecognized items
             }
         }
+
+
+        public struct ItemLocation
+        {
+            public uint Address;
+            public int Bit;
+
+            public ItemLocation(uint address, int bit)
+            {
+                Address = address;
+                Bit = bit;
+            }
+        }
+
+        public static bool GiveItem(string itemName)
+        {
+            ItemLocation itemData = ItemBitflags.GetValueOrDefault(itemName);
+            Memory.WriteBit(itemData.Address, itemData.Bit, true);
+            return true;
+        }
+
+        public static readonly Dictionary<string, int> SigilNameToColossus = new Dictionary<string, int>
+        {
+            { "Sigil of the First Awakening", 1 },
+            { "Sigil of Burdened Earth", 2 },
+            { "Sigil of the Fallen Oath", 3 },
+            { "Sigil of Veiled Fear", 4 },
+            { "Sigil of the Skybound Silence", 5 },
+            { "Sigil of the Hollow Shrine", 6 },
+            { "Sigil of the Sunken Pulse", 7 },
+            { "Sigil of the Watching Walls", 8 },
+            { "Sigil of the Sealed Core", 9 },
+            { "Sigil of the Devouring Wind", 10 },
+            { "Sigil of the Broken Courage", 11 },
+            { "Sigil of the Drowned Throne", 12 },
+            { "Sigil of Endless Horizon", 13 },
+            { "Sigil of Ruined Pride", 14 },
+            { "Sigil of the Bound Colossus", 15 }
+        };
+
+        public static Dictionary<string, ItemLocation> ItemBitflags = new Dictionary<string, ItemLocation>
+            {
+                // Address 0x12DA3DA
+                { "Shaman's Mask",        new ItemLocation(Addresses.ItemArray1, 1) },
+                { "Mask of Strength",     new ItemLocation(Addresses.ItemArray1, 2) },
+                { "Mask of Power",        new ItemLocation(Addresses.ItemArray1, 3) },
+                { "Shaman's Cloak",       new ItemLocation(Addresses.ItemArray1, 5) },
+                { "Cloak of Force",       new ItemLocation(Addresses.ItemArray1, 6) },
+                { "Cloak of Deception",   new ItemLocation(Addresses.ItemArray1, 7) },
+
+                // Address 0x12DA3DC
+                { "Flash Arrow",          new ItemLocation(Addresses.ItemArray2, 2) },
+                { "Whistling Arrow",      new ItemLocation(Addresses.ItemArray2, 3) },
+                { "Harpoon of Thunder",   new ItemLocation(Addresses.ItemArray2, 4) },
+                { "Sword of the Sun",     new ItemLocation(Addresses.ItemArray2, 6) },
+                { "Queen's Sword",        new ItemLocation(Addresses.ItemArray2, 7) },
+
+                // Address 0x12DA3DD
+                { "Cloth of Desperation", new ItemLocation(Addresses.ItemArray3, 0) },
+                { "Eye of the Colossus",  new ItemLocation(Addresses.ItemArray3, 1) },
+                { "Fruit Tree Map",       new ItemLocation(Addresses.ItemArray3, 2) },
+                { "Lizard Detection Stone", new ItemLocation(Addresses.ItemArray3, 3) }
+            };
 
         public static void ProcessPendingItems(ArchipelagoClient client)
         {

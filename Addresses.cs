@@ -67,6 +67,10 @@ namespace SotcArchipelago
         public const uint MaxHealth = 0x012d9bcc; // This number is +4 every colossus
         public const uint MaxStamina = 0x012d9bd0; // This number is +4 every colossus
 
+        public const uint ItemArray1 = 0x12da3da; // Shamans mask ,mask of strength, mask of power, shaman's cloak, cloak of force, cloak of deception
+        public const uint ItemArray2 = 0x12da3dc; // flash arrow, whistling arrow, harpoon of thunder, sword of the sun, queen's sword
+        public const uint ItemArray3 = 0x12da3dd; // cloth of desperation, eye of the colossus, fruit tree map, lizard detection stone
+
         public const uint ShowFruitOnMap = 0x012DA3E5;
 
         // Lizard Addresses

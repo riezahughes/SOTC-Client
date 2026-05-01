@@ -34,9 +34,10 @@ namespace Helpers
         public static bool UpdatePlayerStamina(ArchipelagoClient client)
         {
 
-            int staminaCount = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Sliver of Courage Stamina"));
+            int staminaMinorCount = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Sliver of Courage Stamina"));
+            int staminaMajorCount = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Progressive Stamina Capacity")) * 8;
 
-            float playerStamina = 100.0f + staminaCount;
+            float playerStamina = 100.0f + staminaMinorCount + staminaMajorCount;
 
             byte[] bytes = BitConverter.GetBytes(playerStamina);
 
@@ -48,9 +49,10 @@ namespace Helpers
 
         public static bool UpdatePlayerHealth(ArchipelagoClient client)
         {
-            int healthCount = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Sliver of Hope HP"));
+            int healthMinorCount = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Sliver of Hope HP"));
+            int healthMajorCount = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Progressive Health Capacity")) * 8;
 
-            float playerHealth = 100.0f + healthCount;
+            float playerHealth = 100.0f + healthMinorCount + healthMajorCount;
 
             byte[] bytes = BitConverter.GetBytes(playerHealth);
 
