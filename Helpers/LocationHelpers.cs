@@ -1,21 +1,124 @@
+using Archipelago.Core;
 using Archipelago.Core.Models;
+using Archipelago.Core.Util;
+using Serilog;
 using SotcArchipelago;
 using SotcArchipelago.Models;
+using SotcArchipelago.Options;
 
 namespace Helpers
 {
     public class LocationHelpers
     {
 
-        // you need to re-recreate the riding and walking calculation so you can dynamically add these based on 
-        // the options the player has selected.
+        private static int _climbDistanceAccumulated = 0;
+        private static int _rideDistanceAccumulated = 0;
 
-        public static List<GenericLocationData> GenerateRunAndClimbLocations()
+        // Generates milestone distances matching the AP world logic exactly.
+        // e.g. range=1000, breakpoints=300 → [300, 600, 900, 1000]
+        private static List<int> GenerateDistanceMilestones(int range, int breakpoints)
         {
-            return new List<GenericLocationData>()
+            var milestones = new List<int>();
+            for (int i = 1; i <= range / breakpoints; i++)
+                milestones.Add(i * breakpoints);
+            if (range % breakpoints != 0)
+                milestones.Add(range);
+            return milestones;
+        }
+
+        // Every 5 seconds, samples the activity address. If the value is >= 0x60 the
+        // player is considered active and 50 units are added to the running total.
+        // Any milestone whose total has been reached is sent as an AP check, provided
+        // it hasn't already been checked (guarded by AllLocationsChecked).
+        public static async Task StartTraversalMonitor(ArchipelagoClient client, CancellationToken cancellationToken)
+        {
+            var climbSanitySetting = PlayerStateHelpers.GetPlayerOption<ToggleOptions>(client.Options, "climbsanity");
+            var agroSanitySetting = PlayerStateHelpers.GetPlayerOption<ToggleOptions>(client.Options, "agrosanity");
+
+            bool climbsanityOn = climbSanitySetting == ToggleOptions.TRUE;
+            bool agrosanityOn = agroSanitySetting == ToggleOptions.TRUE;
+
+            if (!climbsanityOn && !agrosanityOn) return;
+
+            int climbRange = PlayerStateHelpers.GetPlayerOptionCounts(client.Options, "climbsanity_range", 5000);
+            int climbBp = PlayerStateHelpers.GetPlayerOptionCounts(client.Options, "climbsanity_break_points", 100);
+            int rideRange = PlayerStateHelpers.GetPlayerOptionCounts(client.Options, "argosanity_range", 50000);
+            int rideBp = PlayerStateHelpers.GetPlayerOptionCounts(client.Options, "argosanity_break_points", 1000);
+
+            var climbMilestones = climbsanityOn ? GenerateDistanceMilestones(climbRange, climbBp) : new List<int>();
+            var rideMilestones = agrosanityOn ? GenerateDistanceMilestones(rideRange, rideBp) : new List<int>();
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                new GenericLocationData("Test Location 1", Addresses.test, "111", LocationCheckType.UShort)
-            };
+                try
+                {
+                    await Task.Delay(5000, cancellationToken);
+
+                    if (!APHelpers.isInTheGame()) continue;
+
+                    var checkedLocations = client.CurrentSession.Locations.AllLocationsChecked;
+
+                    if (climbsanityOn)
+                    {
+                        var climbActivity = Memory.ReadByte(Addresses.ClimbingActivity);
+                        if (climbActivity >= 0x60)
+                            _climbDistanceAccumulated += 50;
+                        Console.WriteLine($"Climbsanity Distance: {_climbDistanceAccumulated}");
+                        foreach (var milestone in climbMilestones)
+                        {
+                            if (_climbDistanceAccumulated >= milestone)
+                            {
+                                long locationId = 98000000L + milestone - 1;
+                                if (!checkedLocations.Contains(locationId))
+                                {
+
+                                    Console.WriteLine("Sending Climb Location");
+
+                                    client.SendLocationAsync(new Location
+                                    {
+                                        Id = (int)locationId,
+                                        Name = $"Climbing Distance: {milestone}",
+                                        CheckType = LocationCheckType.Byte
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    if (agrosanityOn)
+                    {
+                        var rideActivity = Memory.ReadByte(Addresses.AgroListener);
+                        if (rideActivity >= 0x60)
+                            _rideDistanceAccumulated += 50;
+                        Console.WriteLine($"ArgoSanity Distance: {_rideDistanceAccumulated}");
+                        foreach (var milestone in rideMilestones)
+                        {
+                            if (_rideDistanceAccumulated >= milestone)
+                            {
+                                long locationId = 99000000L + milestone - 1;
+                                if (!checkedLocations.Contains(locationId))
+                                {
+                                    Console.WriteLine("Sending Agro Location");
+                                    client.SendLocationAsync(new Location
+                                    {
+                                        Id = (int)locationId,
+                                        Name = $"Riding Distance: {milestone}",
+                                        CheckType = LocationCheckType.Byte
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Traversal monitor error: {ex.Message}");
+                }
+            }
         }
 
         public static Dictionary<string, byte> CharacterToBytes = new Dictionary<string, byte>()

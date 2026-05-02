@@ -35,6 +35,9 @@ namespace SotcArchipelago
 
         public const uint KillPlayer = 0x012D9BCF; // Set to FF
 
+        public const uint AgroListener = 0x013253D5;
+        public const uint ClimbingActivity = 0x00; // TODO: find real address
+
         public const uint GridMapLetter = 0x01466420;
         /*
             0x42 = Column B
@@ -174,22 +177,22 @@ namespace SotcArchipelago
 
         // boss kill addresses
 
-        // 1 Minotaur A — Sigil of the First Awakening
-        // 2 Mammoth — Sigil of Burdened Earth
-        // 3 Knight — Sigil of the Fallen Oath
-        // 4 Kirin — Sigil of Veiled Fear
-        // 5 Bird — Sigil of the Skybound Silence
-        // 6 Minotaur B — Sigil of the Hollow Shrine
-        // 7 Eel — Sigil of the Sunken Pulse
-        // 8 Yamori B — Sigil of the Watching Walls
-        // 9 Kame — Sigil of the Sealed Core
-        // 10 Narga — Sigil of the Devouring Wind
-        // 11 Leo — Sigil of the Broken Courage
-        // 12 Poseidon — Sigil of the Drowned Throne
-        // 13 Snake — Sigil of Endless Horizon
-        // 14 Cerberus — Sigil of Ruined Pride
-        // 15 Minotaur C — Sigil of the Bound Colossus
-        // 16 Evis — Sigil of the Final Blasphemy
+        // 1 Minotaur A ï¿½ Sigil of the First Awakening
+        // 2 Mammoth ï¿½ Sigil of Burdened Earth
+        // 3 Knight ï¿½ Sigil of the Fallen Oath
+        // 4 Kirin ï¿½ Sigil of Veiled Fear
+        // 5 Bird ï¿½ Sigil of the Skybound Silence
+        // 6 Minotaur B ï¿½ Sigil of the Hollow Shrine
+        // 7 Eel ï¿½ Sigil of the Sunken Pulse
+        // 8 Yamori B ï¿½ Sigil of the Watching Walls
+        // 9 Kame ï¿½ Sigil of the Sealed Core
+        // 10 Narga ï¿½ Sigil of the Devouring Wind
+        // 11 Leo ï¿½ Sigil of the Broken Courage
+        // 12 Poseidon ï¿½ Sigil of the Drowned Throne
+        // 13 Snake ï¿½ Sigil of Endless Horizon
+        // 14 Cerberus ï¿½ Sigil of Ruined Pride
+        // 15 Minotaur C ï¿½ Sigil of the Bound Colossus
+        // 16 Evis ï¿½ Sigil of the Final Blasphemy
 
         public const uint BossCol1MintaurAKill = 0x00;
         public const uint BossCol2MammothKill = 0x00;

@@ -246,6 +246,7 @@ public class App
                 gameOverlay.AddTextPopup("Shadow of the Colossus is ready to go.");
 
                 _ = archipelagoClient.MonitorLocationsAsync(GameLocations, _cancellationTokenSource.Token);
+                await LocationHelpers.StartTraversalMonitor(archipelagoClient, _cancellationTokenSource.Token);
             }
             catch (Exception ex)
             {
