@@ -79,7 +79,28 @@ namespace SotcArchipelago.Helpers
             { "Sigil of the Drowned Throne", 12 },
             { "Sigil of Endless Horizon", 13 },
             { "Sigil of Ruined Pride", 14 },
-            { "Sigil of the Bound Colossus", 15 }
+            { "Sigil of the Bound Colossus", 15 },
+            { "Sigil of the fake test", 16 }
+        };
+
+        public static readonly Dictionary<int, string> ColossusToSigilName = new Dictionary<int, string>
+        {
+            { 1, "Sigil of the First Awakening" },
+            { 2, "Sigil of Burdened Earth" },
+            { 3, "Sigil of the Fallen Oath" },
+            { 4, "Sigil of Veiled Fear" },
+            { 5, "Sigil of the Skybound Silence" },
+            { 6, "Sigil of the Hollow Shrine" },
+            { 7, "Sigil of the Sunken Pulse" },
+            { 8, "Sigil of the Watching Walls" },
+            { 9, "Sigil of the Sealed Core" },
+            { 10, "Sigil of the Devouring Wind" },
+            { 11, "Sigil of the Broken Courage" },
+            { 12, "Sigil of the Drowned Throne" },
+            { 13, "Sigil of Endless Horizon" },
+            { 14, "Sigil of Ruined Pride" },
+            { 15, "Sigil of the Bound Colossus" },
+            { 16, "Sigil of the total Nothingness" }
         };
 
         public static Dictionary<string, ItemLocation> ItemBitflags = new Dictionary<string, ItemLocation>

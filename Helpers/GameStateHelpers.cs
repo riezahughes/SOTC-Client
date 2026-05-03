@@ -33,7 +33,7 @@ namespace Helpers
         {
             // TODO Victory logic goes into each of these goal conditions
 
-            int goalCondition = Int32.Parse(client.Options?.GetValueOrDefault("goal", "0").ToString());
+            PlayerVictoryConditions goalCondition = PlayerStateHelpers.GetPlayerOption<PlayerVictoryConditions>(client.Options, "goal");
 
             if (goalCondition == PlayerVictoryConditions.KILL_ALL_COLOSSI)
             {

@@ -11,11 +11,63 @@ namespace Helpers
     public class LocationHelpers
     {
 
-        private static int _climbDistanceAccumulated = 0;
-        private static int _rideDistanceAccumulated = 0;
+        public static List<int> GetCurrentColossiInRun(ArchipelagoClient client)
+        {
+            List<int> colList = new List<int>();
 
-        // Generates milestone distances matching the AP world logic exactly.
-        // e.g. range=1000, breakpoints=300 → [300, 600, 900, 1000]
+            var allLocationIds = client.CurrentSession.Locations.AllLocations;
+
+            foreach (long id in allLocationIds)
+            {
+                if (ColossusLocationReferenceByAPID.TryGetValue((int)id, out int colossiNumber))
+                {
+                    colList.Add(colossiNumber);
+                }
+            }
+
+            return colList.OrderBy(i => i).ToList();
+        }
+
+        public static Dictionary<string, int> ColossusLocationReferenceByLocName = new Dictionary<string, int>()
+        {
+            { "Mintaur A Kill - Col. 1", 1 },
+            { "Mammoth Kill - Col. 2", 2 },
+            { "Knight Kill - Col. 3", 3 },
+            { "Kirin Kill - Col. 4", 4 },
+            { "Bird Kill - Col. 5", 5 },
+            { "Minotaur B Kill - Col. 6", 6 },
+            { "Eel Kill - Col. 7", 7 },
+            { "Yamori B Kill - Col. 8", 8 },
+            { "Kame Kill - Col. 9", 9 },
+            { "Narga Kill - Col. 10", 10 },
+            { "Leo Kill - Col. 11", 11 },
+            { "Poseidon Kill - Col. 12", 12 },
+            { "Snake Kill - Col. 13", 13 },
+            { "Cerberus Kill - Col. 14", 14 },
+            { "Minotaur C Kill - Col. 15", 15 },
+            { "Evis Kill - Col. 16", 16 }
+        };
+
+        public static Dictionary<int, int> ColossusLocationReferenceByAPID = new Dictionary<int, int>()
+        {
+            { 90056000, 1 },  // Mintaur A Kill - Col. 1
+            { 90053000, 2 },  // Mammoth Kill - Col. 2
+            { 90050000, 3 },  // Knight Kill - Col. 3
+            { 90057000, 4 },  // Kirin Kill - Col. 4
+            { 90055000, 5 },  // Bird Kill - Col. 5
+            { 90058000, 6 },  // Minotaur B Kill - Col. 6
+            { 90046000, 7 },  // Eel Kill - Col. 7
+            { 90060000, 8 },  // Yamori B Kill - Col. 8
+            { 90052000, 9 },  // Kame Kill - Col. 9
+            { 90054000, 10 }, // Narga Kill - Col. 10
+            { 90047000, 11 }, // Leo Kill - Col. 11
+            { 90051000, 12 }, // Poseidon Kill - Col. 12
+            { 90059000, 13 }, // Snake Kill - Col. 13
+            { 90049000, 14 }, // Cerberus Kill - Col. 14
+            { 90048000, 15 }, // Minotaur C Kill - Col. 15
+            { 90061000, 16 }  // Evis Kill - Col. 16
+        };
+
         private static List<int> GenerateDistanceMilestones(int range, int breakpoints)
         {
             var milestones = new List<int>();
@@ -26,10 +78,6 @@ namespace Helpers
             return milestones;
         }
 
-        // Every 5 seconds, samples the activity address. If the value is >= 0x60 the
-        // player is considered active and 50 units are added to the running total.
-        // Any milestone whose total has been reached is sent as an AP check, provided
-        // it hasn't already been checked (guarded by AllLocationsChecked).
         public static async Task StartTraversalMonitor(ArchipelagoClient client, CancellationToken cancellationToken)
         {
             var climbSanitySetting = PlayerStateHelpers.GetPlayerOption<ToggleOptions>(client.Options, "climbsanity");
@@ -60,13 +108,15 @@ namespace Helpers
 
                     if (climbsanityOn)
                     {
-                        var climbActivity = Memory.ReadByte(Addresses.ClimbingActivity);
-                        if (climbActivity >= 0x60)
-                            _climbDistanceAccumulated += 50;
-                        Console.WriteLine($"Climbsanity Distance: {_climbDistanceAccumulated}");
+                        var climbActivity = Memory.ReadUShort(Addresses.ControllerBytes);
+                        if (climbActivity == 0xF7FF)
+                            App.ClimbDistanceAccumulated += 20;
+#if DEBUG
+                        Console.WriteLine($"Climbsanity Distance: {App.ClimbDistanceAccumulated}");
+#endif
                         foreach (var milestone in climbMilestones)
                         {
-                            if (_climbDistanceAccumulated >= milestone)
+                            if (App.ClimbDistanceAccumulated >= milestone)
                             {
                                 long locationId = 98000000L + milestone - 1;
                                 if (!checkedLocations.Contains(locationId))
@@ -89,11 +139,13 @@ namespace Helpers
                     {
                         var rideActivity = Memory.ReadByte(Addresses.AgroListener);
                         if (rideActivity >= 0x60)
-                            _rideDistanceAccumulated += 50;
-                        Console.WriteLine($"ArgoSanity Distance: {_rideDistanceAccumulated}");
+                            App.RideDistanceAccumulated += 50;
+#if DEBUG
+                        Console.WriteLine($"ArgoSanity Distance: {App.RideDistanceAccumulated}");
+#endif
                         foreach (var milestone in rideMilestones)
                         {
-                            if (_rideDistanceAccumulated >= milestone)
+                            if (App.RideDistanceAccumulated >= milestone)
                             {
                                 long locationId = 99000000L + milestone - 1;
                                 if (!checkedLocations.Contains(locationId))

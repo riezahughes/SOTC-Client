@@ -8,7 +8,7 @@ namespace SotcArchipelago
 
         // mark all your addresses here for easy access. Then you can just use Addresses.test, as an example.
         public const uint test = 0x000123123;
-
+        public const uint ControllerBytes = 0x013D85D; // a halfword that uses a bitmask.
         public const uint ItemIndexStorage = 0x012D9BBE; // This is the address where we will store the current item index
 
         public const uint InGameCheck = 0x012d9bc0;

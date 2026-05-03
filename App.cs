@@ -16,6 +16,8 @@ public class App
 {
 
     public static int ProcessedItemIndex = 0;
+    public static int ClimbDistanceAccumulated = 0;
+    public static int RideDistanceAccumulated = 0;
 
     public static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
@@ -246,7 +248,7 @@ public class App
                 gameOverlay.AddTextPopup("Shadow of the Colossus is ready to go.");
 
                 _ = archipelagoClient.MonitorLocationsAsync(GameLocations, _cancellationTokenSource.Token);
-                await LocationHelpers.StartTraversalMonitor(archipelagoClient, _cancellationTokenSource.Token);
+                _ = LocationHelpers.StartTraversalMonitor(archipelagoClient, _cancellationTokenSource.Token);
             }
             catch (Exception ex)
             {
