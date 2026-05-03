@@ -2,6 +2,7 @@
 using Archipelago.Core.Util;
 using SotcArchipelago;
 using SotcArchipelago.Helpers;
+using SotcArchipelago.Options;
 
 namespace Helpers
 {
@@ -39,11 +40,11 @@ namespace Helpers
             {
                 CheckColossiWinCondition(client);
             }
-            else if (goalCondition == PlayerVictoryConditions.KILL_ALL_LIZARDS)
+            else if (goalCondition == PlayerVictoryConditions.HUNT_ALL_LIZARDS)
             {
                 CheckLizardHuntWinCondition(client);
             }
-            else if (goalCondition == PlayerVictoryConditions.COLLECTED_ALL_SHARDS)
+            else if (goalCondition == PlayerVictoryConditions.SOUL_SHARD_SEARCH)
             {
                 CheckShardHuntWinCondition(client);
             }

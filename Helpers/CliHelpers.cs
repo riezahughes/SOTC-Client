@@ -10,20 +10,6 @@ namespace SotcArchipelago.Helpers
     {
         public static void RunOptions(ArchipelagoClient client)
         {
-            Console.WriteLine($"--- RUN OPTIONS GO HERE ---");
-
-            Console.WriteLine($"------------------");
-        }
-
-
-
-        public static void RunStatus(ArchipelagoClient client)
-        {
-            List<int> colossiInRun = LocationHelpers.GetCurrentColossiInRun(client);
-
-            ReadOnlyCollection<ItemInfo> items = client.CurrentSession.Items.AllItemsReceived;
-
-            int index = App.ProcessedItemIndex - 1;
 
             PlayerVictoryConditions currentGoal = PlayerStateHelpers.GetPlayerOption<PlayerVictoryConditions>(client.Options, "goal");
             int colossiQuantityOption = PlayerStateHelpers.GetPlayerOptionCounts(client.Options, "colossi_quantity");
@@ -61,14 +47,44 @@ namespace SotcArchipelago.Helpers
             Console.WriteLine($"Agro Sanity: {agroSanity}");
             Console.WriteLine($"Agro Sanity Range: {agroSanityRange}");
             Console.WriteLine($"Agro Sanity Breakpoint: {agroSanityBreakPoint}");
-            Console.WriteLine($"--- COLOSSI STATUS ---");
-            foreach (int colossus in colossiInRun)
-            {
-                var sigilName = ItemHelpers.ColossusToSigilName[colossus];
-                string hasSigil = items.Any(item => item.ItemName == sigilName) ? "UNLOCKED" : "-";
-                Console.WriteLine($"Colossus {colossus}: {hasSigil}");
-            }
             Console.WriteLine($"------------------");
+        }
+
+
+
+        public static void RunGoal(ArchipelagoClient client)
+        {
+
+            PlayerVictoryConditions currentGoal = PlayerStateHelpers.GetPlayerOption<PlayerVictoryConditions>(client.Options, "goal");
+            int soulShardQuantity = PlayerStateHelpers.GetPlayerOptionCounts(client.Options, "soul_shard_quantity");
+            int lizardQuantity = PlayerStateHelpers.GetPlayerOptionCounts(client.Options, "lizard_quantity");
+
+            ReadOnlyCollection<ItemInfo> items = client.CurrentSession.Items.AllItemsReceived;
+
+            switch (currentGoal)
+            {
+                case PlayerVictoryConditions.KILL_ALL_COLOSSI:
+                    List<int> colossiInRun = LocationHelpers.GetCurrentColossiInRun(client);
+                    Console.WriteLine($"--- COLOSSI STATUS ---");
+                    foreach (int colossus in colossiInRun)
+                    {
+                        var sigilName = ItemHelpers.ColossusToSigilName[colossus];
+                        string hasSigil = items.Any(item => item.ItemName == sigilName) ? "UNLOCKED" : "-";
+                        Console.WriteLine($"Colossus {colossus}: {hasSigil}");
+                    }
+                    Console.WriteLine($"------------------");
+                    break;
+                case PlayerVictoryConditions.HUNT_ALL_LIZARDS:
+                    Console.WriteLine($"--- LIZARD COUNT ---");
+                    Console.WriteLine($"Lizards Found: {items.Count(item => item.ItemName.Contains("Lizard Tail"))}/{lizardQuantity}");
+                    Console.WriteLine($"------------------");
+                    break;
+                case PlayerVictoryConditions.SOUL_SHARD_SEARCH:
+                    Console.WriteLine($"--- SOUL SHARD COUNT ---");
+                    Console.WriteLine($"Soul Shards Found: {items.Count(item => item.ItemName.Contains("Soul Shard"))}/{soulShardQuantity}");
+                    Console.WriteLine($"------------------");
+                    break;
+            }
         }
         public static void DebugInformation(ArchipelagoClient client)
         {

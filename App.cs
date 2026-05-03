@@ -183,16 +183,16 @@ public class App
 
             GameLocations = LocationHelpers.BuildLocationList(archipelagoClient.Options);
 
-            GoalOptions goal_option = PlayerStateHelpers.GetPlayerOption<GoalOptions>(archipelagoClient.Options, "goal");
+            PlayerVictoryConditions goal_option = PlayerStateHelpers.GetPlayerOption<PlayerVictoryConditions>(archipelagoClient.Options, "goal");
 
             // pre-run scripts for dealing with different victory conditions
             switch (goal_option)
             {
-                case GoalOptions.KILL_ALL_COLOSSI:
+                case PlayerVictoryConditions.KILL_ALL_COLOSSI:
                     break;
-                case GoalOptions.HUNT_ALL_LIZARDS:
+                case PlayerVictoryConditions.HUNT_ALL_LIZARDS:
                     break;
-                case GoalOptions.SOUL_SHARD_SEARCH:
+                case PlayerVictoryConditions.SOUL_SHARD_SEARCH:
                     break;
             }
 
@@ -269,9 +269,9 @@ public class App
                     {
                         CliHelpers.RunOptions(archipelagoClient);
                     }
-                    else if (input?.Trim().ToLower() == "status")
+                    else if (input?.Trim().ToLower() == "goal")
                     {
-                        CliHelpers.RunStatus(archipelagoClient);
+                        CliHelpers.RunGoal(archipelagoClient);
                     }
                     else if (input?.Trim().ToLower() == "debug")
                     {
@@ -298,19 +298,6 @@ public class App
                             Console.WriteLine($"id: {item.ItemId} - {item.ItemName}");
                         }
 #endif
-                    }
-                    else if (input?.Trim().ToLower().Contains("warp") == true)
-                    {
-                        string raw = input.Trim().Substring(5).Trim();
-                        if (ushort.TryParse(raw, System.Globalization.NumberStyles.HexNumber, null, out ushort warpValue))
-                        {
-                            // warp to grid point. 
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid warp value. Use: warp [Grid Coordinate]");
-                        }
-
                     }
                     else if (!string.IsNullOrWhiteSpace(input))
                     {

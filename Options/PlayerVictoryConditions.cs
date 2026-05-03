@@ -1,9 +1,9 @@
-namespace Helpers
+﻿namespace SotcArchipelago.Options
 {
-    enum PlayerVictoryConditions
+    public enum PlayerVictoryConditions
     {
-        KILL_ALL_COLOSSI = 0,
-        KILL_ALL_LIZARDS = 1,
-        COLLECTED_ALL_SHARDS = 2
+        KILL_ALL_COLOSSI = 1,
+        HUNT_ALL_LIZARDS = 2,
+        SOUL_SHARD_SEARCH = 3,
     }
 }
