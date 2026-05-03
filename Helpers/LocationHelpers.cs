@@ -208,6 +208,11 @@ namespace Helpers
             int ride_id_base = 99000000;
 
             var regional_index = 0;
+            var boss_index = 0;
+
+            ColossiCheckOptions colossiCheckOption = PlayerStateHelpers.GetPlayerOption<ColossiCheckOptions>(options, "colossi_check_choice");
+            int colossiMultiQuantity = PlayerStateHelpers.GetPlayerOptionCounts(options, "colossi_check_multi_quantity");
+            bool isMultiMode = colossiCheckOption == ColossiCheckOptions.MULTI;
 
             List<string> table_order = [
             "Grid F0",
@@ -491,59 +496,27 @@ namespace Helpers
                         }
                         else if (loc.Name.Contains("Kill") && loc is BossLocationData bossLoc)
                         {
-
-                            List<ILocation> conditionalChoice = new List<ILocation>();
-
-                            conditionalChoice.Add(new Location()
+                            List<ILocation> BuildBossConditions() => new List<ILocation>
                             {
-                                Id = -1,
-                                Name = "Grid Check Letter",
-                                Address = Addresses.GridMapLetter,
-                                CheckType = LocationCheckType.Byte,
-                                CompareType = LocationCheckCompareType.Match,
-                                CheckValue = CharacterToBytes[bossLoc.GridLetter].ToString()
-                            });
-
-                            conditionalChoice.Add(new Location()
-                            {
-                                Id = -1,
-                                Name = "Grid Check Number",
-                                Address = Addresses.GridMapNumber,
-                                CheckType = LocationCheckType.Byte,
-                                CompareType = LocationCheckCompareType.Match,
-                                CheckValue = bossLoc.GridNumber
-                            });
-
-                            conditionalChoice.Add(new Location()
-                            {
-                                Id = -1,
-                                Name = "InBossFight",
-                                Address = Addresses.IsFightingColossi,
-                                CheckType = LocationCheckType.Byte,
-                                CompareType = LocationCheckCompareType.GreaterThan,
-                                CheckValue = "0"
-                            });
-
-                            conditionalChoice.Add(new Location()
-                            {
-                                Id = -1,
-                                Name = "Boss HP",
-                                Address = Addresses.ColossusHealth,
-                                CheckType = LocationCheckType.UInt,
-                                CompareType = LocationCheckCompareType.Match,
-                                CheckValue = "0"
-                            });
-
-                            CompositeLocation location = new CompositeLocation()
-                            {
-                                Name = loc.Name,
-                                Id = locationId,
-                                CheckType = LocationCheckType.AND,
-                                Conditions = conditionalChoice,
+                                new Location() { Id = -1, Name = "Grid Check Letter", Address = Addresses.GridMapLetter, CheckType = LocationCheckType.Byte, CompareType = LocationCheckCompareType.Match, CheckValue = CharacterToBytes[bossLoc.GridLetter].ToString() },
+                                new Location() { Id = -1, Name = "Grid Check Number", Address = Addresses.GridMapNumber, CheckType = LocationCheckType.Byte, CompareType = LocationCheckCompareType.Match, CheckValue = bossLoc.GridNumber },
+                                new Location() { Id = -1, Name = "InBossFight", Address = Addresses.IsFightingColossi, CheckType = LocationCheckType.Byte, CompareType = LocationCheckCompareType.GreaterThan, CheckValue = "0" },
+                                new Location() { Id = -1, Name = "Boss HP", Address = Addresses.ColossusHealth, CheckType = LocationCheckType.UInt, CompareType = LocationCheckCompareType.Match, CheckValue = "0" }
                             };
 
-                            locations.Add(location);
+                            locations.Add(new CompositeLocation() { Name = loc.Name, Id = locationId, CheckType = LocationCheckType.AND, Conditions = BuildBossConditions() });
                             location_index++;
+
+                            if (isMultiMode)
+                            {
+                                for (int n = 1; n <= colossiMultiQuantity; n++)
+                                {
+                                    Console.WriteLine($"{loc.Name}: {97000000 + boss_index * 20 + (n - 1)}");
+                                    locations.Add(new CompositeLocation() { Name = $"{loc.Name} - Reward {n}", Id = 97000000 + boss_index * 20 + (n - 1), CheckType = LocationCheckType.AND, Conditions = BuildBossConditions() });
+                                }
+                            }
+
+                            boss_index++;
                             continue;
 
                         }

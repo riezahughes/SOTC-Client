@@ -33,7 +33,10 @@ namespace Helpers
 
         public static bool HasKilledAllColossi(ArchipelagoClient client)
         {
-            return true;
+            int count = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Sigil"));
+            int expectedCount = GetPlayerOptionCounts(client.Options, "colossi_quantity");
+
+            return count >= expectedCount;
         }
 
         public static bool UpdatePlayerStamina(ArchipelagoClient client)
