@@ -13,8 +13,10 @@ namespace Helpers
         {
             var gridLetter = Memory.ReadByte(Addresses.GridMapLetter);
             var gridNumber = Memory.ReadByte(Addresses.GridMapNumber);
-            var murderCount = Memory.ReadByte(Addresses.NumberOfColossiKilled);
-            if (APHelpers.isInTheGame() && gridLetter == 0x46 && gridNumber == 0x08 && murderCount > 16)
+            var currentKills = Memory.ReadByte(Addresses.NumberOfColossiKilled);
+            var total = PlayerStateHelpers.GetPlayerOptionCounts(client.Options, "colossi_quantity");
+
+            if (APHelpers.isInTheGame() && gridLetter == 0x46 && gridNumber == 0x08 && currentKills == total + 1)
             {
                 client.SendGoalCompletion();
             }
@@ -22,12 +24,16 @@ namespace Helpers
 
         internal static bool CheckLizardHuntWinCondition(ArchipelagoClient client)
         {
-            return true;
+            int tailCount = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Lizard Tail"));
+            int maxCount = PlayerStateHelpers.GetPlayerOptionCounts(client.Options, "lizard_quantity");
+            return tailCount >= maxCount;
         }
 
         internal static bool CheckShardHuntWinCondition(ArchipelagoClient client)
         {
-            return true;
+            int shardCount = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Soul Shard"));
+            int maxCount = PlayerStateHelpers.GetPlayerOptionCounts(client.Options, "soul_shard_quantity");
+            return shardCount >= maxCount;
         }
 
         public static bool CheckGoalCondition(ArchipelagoClient client)
@@ -122,8 +128,8 @@ namespace Helpers
                 { "F5", ( "Sigil of the First Awakening", 0x01) },
                 { "F6", ( "", 0x00) },
                 { "F7", ( "", 0x00) },
-                { "F8", ( "Sigil of the Bound Colossus", 0x0f) },
-                { "G1", ( "", 0x00) },
+                { "F8", ( "", 0x0f) },
+                { "G1", ( "Sigil of the Bound Colossus", 0x00) },
                 { "G2", ( "Sigil of the Drowned Throne", 0x0c) },
                 { "G3", ( "", 0x00) },
                 { "G4", ( "", 0x00) },
@@ -175,7 +181,7 @@ namespace Helpers
             { 13, (0xE0, 0xFE, 0x3F) },
             { 14, (0xE0, 0xFF, 0x3B) },
             { 15, (0xE0, 0xEF, 0x3F) },
-            { 16, (0x00, 0x00, 0x20) },
+            { 16, (0xFF, 0xFF, 0xDF) },
         };
 
         public const byte GravesAllUnloaded1 = 0xE0;
@@ -205,10 +211,17 @@ namespace Helpers
                 Memory.WriteByte(Addresses.ColossusGraves2, finalBoss.graves2);
                 Memory.WriteByte(Addresses.ColossusGraves3, finalBoss.graves3);
                 Memory.WriteByte(Addresses.CheckStatues1, 0x00);
-                Memory.WriteByte(Addresses.CheckStatues2, 0x20);
+                Memory.WriteByte(Addresses.CheckStatues2, 0x80);
+                Memory.Write(Addresses.FinalZone, 0x0000839);
 
                 Memory.WriteByte(Addresses.InGameCheck, 0x0f);
                 return;
+            }
+            else if ((gridLetter + gridNumber) == "F8" && !PlayerStateHelpers.HasKilledAllColossi(client))
+            {
+                int count = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Idol Shard"));
+                int expectedCount = PlayerStateHelpers.GetPlayerOptionCounts(client.Options, "colossi_quantity");
+                Console.WriteLine($"Not enough Idol Shard Collected. {count}/{expectedCount}");
             }
 
             // 2. Non-colossus grid → leave state alone, the previous colossus grid's
@@ -237,7 +250,7 @@ namespace Helpers
                 Memory.WriteByte(Addresses.ColossusGraves2, b.graves2);
                 Memory.WriteByte(Addresses.ColossusGraves3, b.graves3);
 #if DEBUG
-                Console.WriteLine($"Grid {gridLetter}{gridNumber}: Col {currentBossId} ALIVE (sigil owned)");
+                Console.WriteLine($"Grid {gridLetter}{gridNumber}: Col {currentBossId} ALIVE ({dictVal.sigil})");
 #endif
             }
             else
@@ -246,7 +259,7 @@ namespace Helpers
                 Memory.WriteByte(Addresses.ColossusGraves2, GravesAllUnloaded2);
                 Memory.WriteByte(Addresses.ColossusGraves3, GravesAllUnloaded3);
 #if DEBUG
-                Console.WriteLine($"Grid {gridLetter}{gridNumber}: Col {currentBossId} LOCKED (no sigil)");
+                Console.WriteLine($"Grid {gridLetter}{gridNumber}: Col {currentBossId} LOCKED ({dictVal.sigil})");
 #endif
             }
         }
@@ -325,6 +338,7 @@ namespace Helpers
                 Addresses.GridMapFull,
                 () =>
                 {
+                    CheckGoalCondition(client);
                     var gridValue = Memory.ReadByte(Addresses.GridMapFull);
                     _gridPreviousValue = gridValue;
                     SetCurrentSigilState(client);

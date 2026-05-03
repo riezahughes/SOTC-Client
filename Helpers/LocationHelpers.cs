@@ -1153,7 +1153,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossG6Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossG6 = new List<GenericLocationData>() {
-            new BossLocationData("Yamori B Kill - Col. 8", Addresses.BossCol8YamoriBKill, "E", "6"),
+            new BossLocationData("Yamori B Kill - Col. 8", Addresses.BossCol8YamoriBKill, "G", "6"),
         };
             return bossG6;
         }
@@ -1161,7 +1161,7 @@ namespace Helpers
         public static List<GenericLocationData> GetBossF8Data(Dictionary<string, object> options)
         {
             List<GenericLocationData> bossF8 = new List<GenericLocationData>() {
-            new BossLocationData("Evis Kill - Col. 16", Addresses.BossCol16EvisKill, "G","6"),
+            new BossLocationData("Evis Kill - Col. 16", Addresses.BossCol16EvisKill, "F","8"),
         };
             return bossF8;
         }

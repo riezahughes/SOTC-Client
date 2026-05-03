@@ -33,7 +33,8 @@ namespace Helpers
 
         public static bool HasKilledAllColossi(ArchipelagoClient client)
         {
-            int count = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Sigil"));
+
+            int count = client.CurrentSession.Items.AllItemsReceived.Count(item => item.ItemName.Contains("Idol Shard"));
             int expectedCount = GetPlayerOptionCounts(client.Options, "colossi_quantity");
 
             return count >= expectedCount;

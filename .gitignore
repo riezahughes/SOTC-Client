@@ -133,3 +133,4 @@ $RECYCLE.BIN/
 _NCrunch*
 /.vs
 /appsettings.Local.json
+/.claude/settings.local.json

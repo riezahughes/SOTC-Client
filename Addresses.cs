@@ -30,6 +30,7 @@ namespace SotcArchipelago
         public const uint ColossusGraves2 = 0x012d9b5c; // 1, 2, 4, 6, 11, 12, 13, 15
         public const uint ColossusGraves3 = 0x012d9b5d; // 7, 8, 10, 14, 16
 
+        public const uint FinalZone = 0x012D9B88;
         public const uint SkipCutscenes1 = 0x012D9B88;
         public const uint SkipCutscenes2 = 0x012D9B88;
 

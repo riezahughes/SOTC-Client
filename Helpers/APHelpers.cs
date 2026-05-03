@@ -14,13 +14,14 @@ namespace Helpers
         public static Boolean isInTheGame()
         {
 
-            ulong currentGameStatus = Memory.ReadUInt(Addresses.InGameCheck);
+            ulong currentGameStatus = Memory.ReadByte(Addresses.InGameCheck);
 
             if (currentGameStatus != 0xff)
             {
                 return true;
 
             }
+
             return false;
         }
 
