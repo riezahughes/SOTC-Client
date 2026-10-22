@@ -46,7 +46,7 @@ namespace SotcArchipelago.Helpers
                     $"task_for_pid failed with code {result} (running as uid {geteuid()}, PCSX2 pid {process.Id}). " +
                     (geteuid() != 0
                         ? "The client has to run as root."
-                        : "macOS refused access even as root, which usually means PCSX2 uses the hardened runtime and the client isn't allowed to debug it."));
+                        : "macOS refused access even as root, which usually means PCSX2 still uses the hardened runtime. Re-sign it with: codesign --force --deep --sign - /Applications/PCSX2*.app"));
 
             ulong loadAddress = FindMainImage(task)
                 ?? throw new InvalidOperationException("Could not find the PCSX2 executable in memory.");

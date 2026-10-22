@@ -1,8 +1,10 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using Archipelago.Core;
 using Archipelago.Core.Helpers;
 using Archipelago.Core.Models;
@@ -112,7 +114,7 @@ public class App
         // get the duckstation offset
         try
         {
-            Memory.GlobalOffset = OperatingSystem.IsMacOS() ? MacPcsx2Helpers.GetEEmemOffset() : Memory.GetPCSX2Offset();
+            Memory.GlobalOffset = OperatingSystem.IsMacOS() ? GetMacPcsx2Offset() : Memory.GetPCSX2Offset();
             Console.WriteLine($"PCSX2 Memory Offset found at: 0x{Memory.GlobalOffset:X}");
         }
         catch (Exception ex)
@@ -360,6 +362,53 @@ public class App
         {
             // Perform any necessary cleanup here
             Console.WriteLine("Shutting down...");
+        }
+    }
+
+    // tries to find the address by itself first and only asks the player when macOS won't let it
+    private static ulong GetMacPcsx2Offset()
+    {
+        try
+        {
+            return MacPcsx2Helpers.GetEEmemOffset();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Couldn't find the PCSX2 memory address automatically: {ex.Message}");
+            return PromptForPcsx2Offset();
+        }
+    }
+
+    private static ulong PromptForPcsx2Offset()
+    {
+        Console.WriteLine();
+        Console.WriteLine(Chalk.BgMagenta.White.Bold["  🐎🐴 PCSX2 Memory Address  🐎🐴  "]);
+        Console.WriteLine();
+        Console.WriteLine(Chalk.Yellow.Bold["  ⚠  macOS needs the PCSX2 memory address entered manually"]);
+        Console.WriteLine();
+        Console.WriteLine(Chalk.Cyan["  1. "] + "Once only: let the client read PCSX2, then " + Chalk.Bold["restart PCSX2"] + " and start the game:");
+        Console.WriteLine(Chalk.Green["       codesign --force --deep --sign - /Applications/PCSX2*.app"]);
+        Console.WriteLine(Chalk.Cyan["  2. "] + "With the game running, open a new Terminal window and run:");
+        Console.WriteLine(Chalk.Green["       sudo lldb -p $(pgrep -x PCSX2) -b -o 'p/x *(unsigned long long *)&EEmem' -o 'detach'"]);
+        Console.WriteLine(Chalk.Cyan["  3. "] + "Paste the " + Chalk.Green.Bold["0x..."] + " address (or the whole line) below");
+        Console.WriteLine(Chalk.Gray["     The address changes whenever PCSX2 is restarted."]);
+        Console.WriteLine();
+
+        while (true)
+        {
+            Console.Write(Chalk.Magenta.Bold["  📍 Address: "]);
+            string input = Console.ReadLine() ?? "";
+
+            // accept the whole lldb output line as well as just the address
+            var matches = Regex.Matches(input, "0[xX]([0-9a-fA-F]+)");
+            string digits = matches.Count > 0 ? matches[^1].Groups[1].Value : input.Trim();
+
+            if (ulong.TryParse(digits, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong offset) && offset != 0)
+            {
+                return offset;
+            }
+
+            Console.WriteLine(Chalk.Red.Bold["  ✖  That doesn't look like a valid address. "] + Chalk.Gray["It should look like: "] + Chalk.Green["0x0000000139489000"]);
         }
     }
 }
