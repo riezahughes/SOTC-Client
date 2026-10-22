@@ -19,6 +19,9 @@ namespace SotcArchipelago.Helpers
         private const uint VM_REGION_BASIC_INFO_COUNT_64 = 9;
         private const int VM_PROT_READ = 1;
 
+        [DllImport("libc")]
+        private static extern uint geteuid();
+
         [DllImport("libSystem.dylib")]
         private static extern int mach_task_self();
 
@@ -39,7 +42,11 @@ namespace SotcArchipelago.Helpers
 
             int result = task_for_pid(mach_task_self(), process.Id, out int task);
             if (result != 0)
-                throw new InvalidOperationException($"task_for_pid failed ({result}). The client has to run as root.");
+                throw new InvalidOperationException(
+                    $"task_for_pid failed with code {result} (running as uid {geteuid()}, PCSX2 pid {process.Id}). " +
+                    (geteuid() != 0
+                        ? "The client has to run as root."
+                        : "macOS refused access even as root, which usually means PCSX2 uses the hardened runtime and the client isn't allowed to debug it."));
 
             ulong loadAddress = FindMainImage(task)
                 ?? throw new InvalidOperationException("Could not find the PCSX2 executable in memory.");
