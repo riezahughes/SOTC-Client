@@ -134,3 +134,5 @@ _NCrunch*
 /.vs
 /appsettings.Local.json
 /.claude/settings.local.json
+
+CLAUDE.md

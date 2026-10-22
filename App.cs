@@ -1,5 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using Archipelago.Core;
 using Archipelago.Core.Helpers;
@@ -8,6 +10,7 @@ using Archipelago.Core.Util;
 using Archipelago.Core.Util.Overlay;
 using Archipelago.MultiClient.Net.Models;
 using Helpers;
+using Kokuban;
 using Microsoft.Extensions.Configuration;
 using SotcArchipelago.Helpers;
 using SotcArchipelago.Options;
@@ -21,8 +24,36 @@ public class App
 
     public static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
+    [DllImport("libc")]
+    private static extern uint geteuid();
+
     private static async Task Main(string[] args)
     {
+        // macOS only lets root read another process's memory, so relaunch under sudo in the same terminal
+        if (OperatingSystem.IsMacOS() && geteuid() != 0)
+        {
+            Console.OutputEncoding = Encoding.UTF8;
+            Console.WriteLine();
+            Console.WriteLine(Chalk.BgMagenta.White.Bold["  🐎🐴 SOTC Archipelago Client · macOS  🐎🐴  "]);
+            Console.WriteLine();
+            Console.WriteLine(Chalk.Yellow.Bold["  ⚠  Administrator access needed"]);
+            Console.WriteLine(Chalk.Gray["     macOS only lets admin apps read PCSX2's memory."]);
+            Console.WriteLine();
+            Console.WriteLine(Chalk.Cyan["  🔑 Enter your Mac password below."]);
+            Console.WriteLine(Chalk.Gray["     Nothing will appear as you type, that's normal."]);
+            Console.WriteLine();
+
+            var startInfo = new ProcessStartInfo("/usr/bin/sudo") { UseShellExecute = false };
+            startInfo.ArgumentList.Add("-p");
+            startInfo.ArgumentList.Add(Chalk.Magenta.Bold["  🔒 Password: "].ToString());
+            startInfo.ArgumentList.Add(Environment.ProcessPath!);
+            foreach (var arg in args) startInfo.ArgumentList.Add(arg);
+
+            using var elevated = Process.Start(startInfo)!;
+            await elevated.WaitForExitAsync();
+            Environment.Exit(elevated.ExitCode);
+        }
+
         Console.OutputEncoding = Encoding.UTF8;
         Console.Title = "🐎🐴 SOTC Archipelago Client";
 
@@ -57,7 +88,7 @@ public class App
 
             try
             {
-                gameClient = new GameClient("pcsx2-qt");
+                gameClient = new GameClient(OperatingSystem.IsMacOS() ? "PCSX2" : "pcsx2-qt");
                 clientInitializedAndConnected = true;
             }
             catch (Exception ex)
@@ -81,7 +112,7 @@ public class App
         // get the duckstation offset
         try
         {
-            Memory.GlobalOffset = Memory.GetPCSX2Offset();
+            Memory.GlobalOffset = OperatingSystem.IsMacOS() ? MacPcsx2Helpers.GetEEmemOffset() : Memory.GetPCSX2Offset();
             Console.WriteLine($"PCSX2 Memory Offset found at: 0x{Memory.GlobalOffset:X}");
         }
         catch (Exception ex)
@@ -221,7 +252,8 @@ public class App
                 FadeDuration = 10.0f,
             });
 
-            archipelagoClient.IntializeOverlayService(gameOverlay);
+            var toggleableOverlay = new ToggleableOverlayService(gameOverlay);
+            archipelagoClient.IntializeOverlayService(toggleableOverlay);
 
             //foreach (var location in GameLocations)
             //{
@@ -245,7 +277,7 @@ public class App
 
                 await archipelagoClient.ReceiveReady();
 
-                gameOverlay.AddTextPopup("Shadow of the Colossus is ready to go.");
+                toggleableOverlay.AddTextPopup("Shadow of the Colossus is ready to go.");
 
                 _ = archipelagoClient.MonitorLocationsAsync(GameLocations, _cancellationTokenSource.Token);
                 _ = LocationHelpers.StartTraversalMonitor(archipelagoClient, _cancellationTokenSource.Token);
@@ -298,6 +330,11 @@ public class App
                             Console.WriteLine($"id: {item.ItemId} - {item.ItemName}");
                         }
 #endif
+                    }
+                    else if (input?.Trim().ToLower() == "overlay")
+                    {
+                        toggleableOverlay.Enabled = !toggleableOverlay.Enabled;
+                        Console.WriteLine($"Game overlay {(toggleableOverlay.Enabled ? "enabled" : "disabled")}.");
                     }
                     else if (!string.IsNullOrWhiteSpace(input))
                     {

@@ -42,3 +42,36 @@ jobs:
           files: "./publish/SotcArchipelago_${{ github.ref_name }}_x64.exe"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # macOS builds run on a mac runner so the SDK ad-hoc signs them (unsigned arm64 binaries get killed by macOS)
+  release-macos:
+    needs: release
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        rid: [osx-arm64, osx-x64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+            ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Setup .NET 8.x
+        uses: actions/setup-dotnet@v4
+        with:
+            dotnet-version: '8.x'
+
+      - name: Publish a release (${{ matrix.rid }})
+        run: dotnet publish -f net8.0 -c Release -r ${{ matrix.rid }} --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true -o ./publish
+
+      # zipped so the executable permission survives the download
+      - name: Zip client
+        run: |
+            cd ./publish
+            zip -r SotcArchipelago_${{ github.ref_name }}_${{ matrix.rid }}.zip SotcArchipelago libcimgui.dylib
+
+      - name: Publish new client
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "./publish/SotcArchipelago_${{ github.ref_name }}_${{ matrix.rid }}.zip"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

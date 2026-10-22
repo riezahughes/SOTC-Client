@@ -5,6 +5,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,9 +18,18 @@
     </Content>
   </ItemGroup>
 
+  <!-- Local dev machine: use your local fork checkout if present -->
+  <ItemGroup Condition="Exists('D:\Archipelago\dev\Archipelago.core.myrepo\Archipelago.Core\Archipelago.Core.csproj')">
+    <ProjectReference Include="D:\Archipelago\dev\Archipelago.core.myrepo\Archipelago.Core\Archipelago.Core.csproj"
+                      AdditionalProperties="AllowUnsafeBlocks=true" />
+  </ItemGroup>
+
+  <!-- CI / anyone else: use the published NuGet package -->
+  <ItemGroup Condition="!Exists('D:\Archipelago\dev\Archipelago.core.myrepo\Archipelago.Core\Archipelago.Core.csproj')">
+    <PackageReference Include="Archipelago.Core" Version="2.1.0" />
+  </ItemGroup>
+
   <ItemGroup>
-	<!--<PackageReference Include="Archipelago.Core" Version="1.2.3" />-->
-	<ProjectReference Include="D:\Archipelago\dev\Archipelago.Core\Archipelago.Core.csproj" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
     <PackageReference Include="Kokuban" Version="0.2.0" />
